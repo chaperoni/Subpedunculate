@@ -418,7 +418,9 @@ class Battleground
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
 
         virtual void AddPlayer(Player* player);                // must be implemented in BG subclass
-
+		virtual void SetTimeLimit(uint8 TimeLimit) { }
+		virtual void SetMaxFlags(uint8 MaxFlags) { }
+			
         void AddOrSetPlayerToCorrectBgGroup(Player* player, uint32 team);
 
         virtual void RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPacket);

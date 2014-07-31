@@ -77,7 +77,7 @@ void BattlegroundWS::PostUpdateImpl(uint32 diff)
 {
     if (GetStatus() == STATUS_IN_PROGRESS)
     {
-        if (GetStartTime() >= 27*MINUTE*IN_MILLISECONDS)
+		if (GetStartTime() >= uint32((2 + GetTimeLimit())*MINUTE*IN_MILLISECONDS))
         {
             if (GetTeamScore(TEAM_ALLIANCE) == 0)
             {
@@ -99,7 +99,7 @@ void BattlegroundWS::PostUpdateImpl(uint32 diff)
         else if (GetStartTime() > uint32(_minutesElapsed * MINUTE * IN_MILLISECONDS) +  3 * MINUTE * IN_MILLISECONDS)
         {
             ++_minutesElapsed;
-            UpdateWorldState(BG_WS_STATE_TIMER, 25 - _minutesElapsed);
+            UpdateWorldState(BG_WS_STATE_TIMER, GetTimeLimit() - _minutesElapsed);
         }
 
         if (_flagState[TEAM_ALLIANCE] == BG_WS_FLAG_STATE_WAIT_RESPAWN)
@@ -232,6 +232,18 @@ void BattlegroundWS::AddPlayer(Player* player)
     PlayerScores[player->GetGUIDLow()] = new BattlegroundWGScore(player->GetGUID());
 }
 
+void BattlegroundWS::SetTimeLimit(uint8 TimeLimit)
+{
+	m_TimeLimit = TimeLimit;
+	UpdateWorldState(BG_WS_STATE_TIMER, GetTimeLimit() - _minutesElapsed);
+}
+
+void BattlegroundWS::SetMaxFlags(uint8 MaxFlags)
+{
+	m_MaxFlags = MaxFlags;
+	UpdateWorldState(BG_WS_FLAG_CAPTURES_MAX, MaxFlags);
+}
+
 void BattlegroundWS::RespawnFlag(uint32 Team, bool captured)
 {
     if (Team == ALLIANCE)
@@ -306,7 +318,7 @@ void BattlegroundWS::EventPlayerCapturedFlag(Player* player)
         else if (_flagDebuffState == 2)
           player->RemoveAurasDueToSpell(WS_SPELL_BRUTAL_ASSAULT);
 
-        if (GetTeamScore(TEAM_ALLIANCE) < BG_WS_MAX_TEAM_SCORE)
+		if (GetTeamScore(TEAM_ALLIANCE) < GetMaxFlags())
             AddPoint(ALLIANCE, 1);
         PlaySoundToAll(BG_WS_SOUND_FLAG_CAPTURED_ALLIANCE);
         RewardReputationToTeam(890, m_ReputationCapture, ALLIANCE);
@@ -325,7 +337,7 @@ void BattlegroundWS::EventPlayerCapturedFlag(Player* player)
         else if (_flagDebuffState == 2)
           player->RemoveAurasDueToSpell(WS_SPELL_BRUTAL_ASSAULT);
 
-        if (GetTeamScore(TEAM_HORDE) < BG_WS_MAX_TEAM_SCORE)
+        if (GetTeamScore(TEAM_HORDE) < GetMaxFlags())
             AddPoint(HORDE, 1);
         PlaySoundToAll(BG_WS_SOUND_FLAG_CAPTURED_HORDE);
         RewardReputationToTeam(889, m_ReputationCapture, HORDE);
@@ -349,10 +361,10 @@ void BattlegroundWS::EventPlayerCapturedFlag(Player* player)
     // update last flag capture to be used if teamscore is equal
     SetLastFlagCapture(player->GetTeam());
 
-    if (GetTeamScore(TEAM_ALLIANCE) == BG_WS_MAX_TEAM_SCORE)
+    if (GetTeamScore(TEAM_ALLIANCE) == GetMaxFlags())
         winner = ALLIANCE;
 
-    if (GetTeamScore(TEAM_HORDE) == BG_WS_MAX_TEAM_SCORE)
+    if (GetTeamScore(TEAM_HORDE) == GetMaxFlags())
         winner = HORDE;
 
     if (winner)
@@ -848,7 +860,7 @@ void BattlegroundWS::FillInitialWorldStates(WorldPacket& data)
     else
         data << uint32(BG_WS_FLAG_UNK_HORDE) << uint32(0);
 
-    data << uint32(BG_WS_FLAG_CAPTURES_MAX) << uint32(BG_WS_MAX_TEAM_SCORE);
+    data << uint32(BG_WS_FLAG_CAPTURES_MAX) << uint32(GetMaxFlags());
 
     if (GetStatus() == STATUS_IN_PROGRESS)
     {

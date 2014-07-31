@@ -18,6 +18,9 @@
 #include "ScriptLoader.h"
 #include "World.h"
 
+//custom
+void AddSC_npc_gmtool();
+
 //examples
 void AddSC_example_creature();
 void AddSC_example_escort();
@@ -1440,6 +1443,7 @@ void AddCustomScripts()
 {
 #ifdef SCRIPTS
     /* This is where custom scripts should be added. */
+	AddSC_npc_gmtool();
 
 #endif
 }
