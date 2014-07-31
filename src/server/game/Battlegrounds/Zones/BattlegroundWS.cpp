@@ -77,7 +77,7 @@ void BattlegroundWS::PostUpdateImpl(uint32 diff)
 {
     if (GetStatus() == STATUS_IN_PROGRESS)
     {
-		if (GetStartTime() >= uint32((2 + GetTimeLimit())*MINUTE*IN_MILLISECONDS))
+        if (GetStartTime() >= uint32((2 + GetTimeLimit())*MINUTE*IN_MILLISECONDS))
         {
             if (GetTeamScore(TEAM_ALLIANCE) == 0)
             {
@@ -234,14 +234,14 @@ void BattlegroundWS::AddPlayer(Player* player)
 
 void BattlegroundWS::SetTimeLimit(uint8 TimeLimit)
 {
-	m_TimeLimit = TimeLimit;
-	UpdateWorldState(BG_WS_STATE_TIMER, GetTimeLimit() - _minutesElapsed);
+    m_TimeLimit = TimeLimit;
+    UpdateWorldState(BG_WS_STATE_TIMER, GetTimeLimit() - _minutesElapsed);
 }
 
 void BattlegroundWS::SetMaxFlags(uint8 MaxFlags)
 {
-	m_MaxFlags = MaxFlags;
-	UpdateWorldState(BG_WS_FLAG_CAPTURES_MAX, MaxFlags);
+    m_MaxFlags = MaxFlags;
+    UpdateWorldState(BG_WS_FLAG_CAPTURES_MAX, MaxFlags);
 }
 
 void BattlegroundWS::RespawnFlag(uint32 Team, bool captured)
@@ -318,7 +318,7 @@ void BattlegroundWS::EventPlayerCapturedFlag(Player* player)
         else if (_flagDebuffState == 2)
           player->RemoveAurasDueToSpell(WS_SPELL_BRUTAL_ASSAULT);
 
-		if (GetTeamScore(TEAM_ALLIANCE) < GetMaxFlags())
+        if (GetTeamScore(TEAM_ALLIANCE) < GetMaxFlags())
             AddPoint(ALLIANCE, 1);
         PlaySoundToAll(BG_WS_SOUND_FLAG_CAPTURED_ALLIANCE);
         RewardReputationToTeam(890, m_ReputationCapture, ALLIANCE);

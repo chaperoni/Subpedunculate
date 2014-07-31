@@ -1443,7 +1443,7 @@ void AddCustomScripts()
 {
 #ifdef SCRIPTS
     /* This is where custom scripts should be added. */
-	AddSC_npc_gmtool();
+    AddSC_npc_gmtool();
 
 #endif
 }

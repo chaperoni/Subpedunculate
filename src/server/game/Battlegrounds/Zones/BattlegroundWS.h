@@ -241,18 +241,18 @@ class BattlegroundWS : public Battleground
 
         uint32 GetPrematureWinner();
 
-		void SetTimeLimit(uint8 TimeLimit);
-		uint8 GetTimeLimit() { return m_TimeLimit; }
+        void SetTimeLimit(uint8 TimeLimit);
+        uint8 GetTimeLimit() { return m_TimeLimit; }
 		
-		void SetMaxFlags(uint8 MaxFlags);
-		uint8 GetMaxFlags() { return m_MaxFlags; }
+        void SetMaxFlags(uint8 MaxFlags);
+        uint8 GetMaxFlags() { return m_MaxFlags; }
 
         /* Achievements*/
         bool CheckAchievementCriteriaMeet(uint32 criteriaId, Player const* source, Unit const* target = NULL, uint32 miscvalue1 = 0);
 
     private:
-		uint8 m_TimeLimit = 25;
-		uint8 m_MaxFlags = BG_WS_MAX_TEAM_SCORE;
+        uint8 m_TimeLimit = 25;
+        uint8 m_MaxFlags = BG_WS_MAX_TEAM_SCORE;
         uint64 m_FlagKeepers[2];                            // 0 - alliance, 1 - horde
         uint64 m_DroppedFlagGUID[2];
         uint8 _flagState[2];                               // for checking flag state
