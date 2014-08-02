@@ -456,27 +456,33 @@ inline void Battleground::_ProcessJoin(uint32 diff)
         }
 
         StartingEventCloseDoors();
+
         SetStartDelayTime(StartDelayTimes[BG_STARTING_EVENT_FIRST]);
         // First start warning - 2 or 1 minute
         SendMessageToAll(StartMessageIds[BG_STARTING_EVENT_FIRST], CHAT_MSG_BG_SYSTEM_NEUTRAL);
+        SetVotePhase(BG_VOTE_PHASE_1);
     }
     // After 1 minute or 30 seconds, warning is signaled
     else if (GetStartDelayTime() <= StartDelayTimes[BG_STARTING_EVENT_SECOND] && !(m_Events & BG_STARTING_EVENT_2))
     {
         m_Events |= BG_STARTING_EVENT_2;
         SendMessageToAll(StartMessageIds[BG_STARTING_EVENT_SECOND], CHAT_MSG_BG_SYSTEM_NEUTRAL);
+        CalculateVoteResult(GetVotePhase());
+        SetVotePhase(BG_VOTE_PHASE_2);
     }
     // After 30 or 15 seconds, warning is signaled
     else if (GetStartDelayTime() <= StartDelayTimes[BG_STARTING_EVENT_THIRD] && !(m_Events & BG_STARTING_EVENT_3))
     {
         m_Events |= BG_STARTING_EVENT_3;
         SendMessageToAll(StartMessageIds[BG_STARTING_EVENT_THIRD], CHAT_MSG_BG_SYSTEM_NEUTRAL);
+        CalculateVoteResult(GetVotePhase());
+        SetVotePhase(BG_VOTE_PHASE_3);
     }
     // Delay expired (after 2 or 1 minute)
     else if (GetStartDelayTime() <= 0 && !(m_Events & BG_STARTING_EVENT_4))
     {
         m_Events |= BG_STARTING_EVENT_4;
-
+        CalculateVoteResult(GetVotePhase());
         StartingEventOpenDoors();
 
         SendWarningToAll(StartMessageIds[BG_STARTING_EVENT_FOURTH]);
@@ -605,6 +611,111 @@ void Battleground::SendPacketToAll(WorldPacket* packet)
         if (Player* player = _GetPlayer(itr, "SendPacketToAll"))
             player->SendDirectMessage(packet);
 }
+
+void Battleground::CastVote(uint64 playerguid, uint8 vote)
+{
+    BattlegroundVoteMap[playerguid] = vote;
+}
+
+bool Battleground::HasVoted(uint64 playerguid)
+{
+    std::map<uint64, uint8>::iterator itr;
+    itr = BattlegroundVoteMap.find(playerguid);
+    if (itr == BattlegroundVoteMap.end())
+        return false;
+    return true;
+}
+
+void Battleground::CalculateVoteResult(BattlegroundVotePhases VotePhase)
+{   
+    std::vector<std::pair<uint8, uint8> > VoteCount;
+    uint8 i = 0;
+
+
+    for (i = 0; i < 4; i++)
+    {
+        VoteCount.push_back(std::pair<uint8, uint8>(i, 0));        
+    }
+
+
+    uint8 vote = 10;    
+    uint8 result = 0;
+    uint8 tieSize = 1;   
+
+
+    for (std::map<uint64, uint8>::const_iterator itr = BattlegroundVoteMap.begin(); itr != BattlegroundVoteMap.end(); ++itr)
+    {
+        vote = itr->second;        
+        VoteCount.at(vote).second = VoteCount.at(vote).second + 1;
+    }    
+
+    std::sort(VoteCount.begin(), VoteCount.end(),
+        [](const std::pair <uint8, uint8>& lhs, const std::pair<uint8, uint8>& rhs) {return lhs.second > rhs.second; });
+
+
+
+    std::vector<std::pair<uint8, uint8> >::const_iterator itr;
+    std::vector<std::pair<uint8, uint8> >::const_iterator itr2;
+    for (itr = VoteCount.begin(), itr2 = VoteCount.begin() + 1; itr2 != VoteCount.end(); ++itr, ++itr2)
+    {
+        if (itr->second == itr2->second)
+            tieSize++;
+        else
+            break;
+    }
+
+    if (tieSize > 1)
+        result = VoteCount.at(urand(0, tieSize - 1)).first;
+    else
+        result = VoteCount.at(0).first;
+
+    uint8 Timer = 0;
+    uint8 Objective = 0;
+
+    switch (VotePhase)
+    {
+    case BG_VOTE_PHASE_1:
+        if (result == 0)
+            SetMode(MODE_CTF);
+        else if (result == 1)
+            SetMode(MODE_TEAMDEATHMATCH);
+        else
+            SetMode(MODE_DEATHMATCH);
+        break;
+
+    case BG_VOTE_PHASE_2:
+        if (result == 0)
+            Timer = 10;
+        else if (result == 1)
+            Timer = 20;
+        else if (result == 2)
+            Timer = 30;
+        else
+            Timer = 60;
+        SetTimeLimit(Timer);
+        break;
+
+    case BG_VOTE_PHASE_3:
+        if (result == 0)
+            Objective = 1;
+        else if (result == 1)
+            Objective = 3;
+        else if (result == 2)
+            Objective = 5;
+        else
+            Objective = 10;
+        SetMaxFlags(Objective);
+        break;
+
+    default:
+        break;
+    }
+
+    BattlegroundVoteMap.clear();
+
+}
+
+
 
 void Battleground::SendPacketToTeam(uint32 TeamID, WorldPacket* packet, Player* sender, bool self)
 {

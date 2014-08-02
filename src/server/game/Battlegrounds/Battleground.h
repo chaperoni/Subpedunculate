@@ -68,6 +68,13 @@ enum BattlegroundQuests
     SPELL_AB_QUEST_REWARD_5_BASES   = 24064
 };
 
+enum BattlegroundModes
+{
+    MODE_CTF = 0,
+    MODE_TEAMDEATHMATCH = 1,
+    MODE_DEATHMATCH = 2
+};
+
 enum BattlegroundMarks
 {
     SPELL_WS_MARK_LOSER             = 24950,
@@ -184,6 +191,15 @@ enum BattlegroundStartingEvents
     BG_STARTING_EVENT_4     = 0x08
 };
 
+enum BattlegroundVotePhases
+{
+    BG_VOTE_PHASE_NONE      = 0,                            //none
+    BG_VOTE_PHASE_1         = 1,                            //Mode
+    BG_VOTE_PHASE_2         = 2,                            //Time Limit
+    BG_VOTE_PHASE_3         = 3                             //Objectives
+};
+
+
 enum BattlegroundStartingEventsIds
 {
     BG_STARTING_EVENT_FIRST     = 0,
@@ -241,6 +257,8 @@ class Battleground
         BattlegroundBracketId GetBracketId() const { return m_BracketId; }
         uint32 GetInstanceID() const        { return m_InstanceID; }
         BattlegroundStatus GetStatus() const { return m_Status; }
+        BattlegroundVotePhases GetVotePhase() const { return m_VotePhase; }
+        BattlegroundModes GetMode() const { return m_Mode; }
         uint32 GetClientInstanceID() const  { return m_ClientInstanceID; }
         uint32 GetStartTime() const         { return m_StartTime; }
         uint32 GetEndTime() const           { return m_EndTime; }
@@ -269,6 +287,8 @@ class Battleground
         void SetBracket(PvPDifficultyEntry const* bracketEntry);
         void SetInstanceID(uint32 InstanceID) { m_InstanceID = InstanceID; }
         void SetStatus(BattlegroundStatus Status) { m_Status = Status; }
+        void SetVotePhase(BattlegroundVotePhases VotePhase) { m_VotePhase = VotePhase; }
+        void SetMode(BattlegroundModes Mode) { m_Mode = Mode; }
         void SetClientInstanceID(uint32 InstanceID) { m_ClientInstanceID = InstanceID; }
         void SetStartTime(uint32 Time)      { m_StartTime = Time; }
         void SetEndTime(uint32 Time)        { m_EndTime = Time; }
@@ -472,6 +492,13 @@ class Battleground
 
         virtual uint32 GetPrematureWinner();
 
+        //vote
+        std::map<uint64, uint8> BattlegroundVoteMap;
+        void CastVote(uint64 playerguid, uint8 vote);
+        bool HasVoted(uint64 playerguid);
+        void CalculateVoteResult(BattlegroundVotePhases VotePhase);
+
+
     protected:
         // this method is called, when BG cannot spawn its own spirit guide, or something is wrong, It correctly ends Battleground
         void EndNow();
@@ -521,6 +548,8 @@ class Battleground
         BattlegroundStatus m_Status;
         uint32 m_ClientInstanceID;                          // the instance-id which is sent to the client and without any other internal use
         uint32 m_StartTime;
+        BattlegroundVotePhases m_VotePhase;
+        BattlegroundModes m_Mode;
         uint32 m_ResetStatTimer;
         uint32 m_ValidStartPositionTimer;
         int32 m_EndTime;                                    // it is set to 120000 when bg is ending and it decreases itself

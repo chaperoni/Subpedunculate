@@ -82,7 +82,10 @@ public:
         case 120:			
             if (Battleground* bg = player->GetBattleground())
                 bg->SetMaxFlags(uint8(action - 110));
-            break;		
+            break;
+
+        default:
+            break;
 
         }
         player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
