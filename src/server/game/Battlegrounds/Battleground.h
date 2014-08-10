@@ -25,6 +25,7 @@
 #include "DBCEnums.h"
 #include "WorldPacket.h"
 #include "Object.h"
+#include "BattlegroundMgr.h"
 
 class Creature;
 class GameObject;
@@ -101,7 +102,8 @@ enum BattlegroundMarksCount
 enum BattlegroundCreatures
 {
     BG_CREATURE_ENTRY_A_SPIRITGUIDE      = 13116,           // alliance
-    BG_CREATURE_ENTRY_H_SPIRITGUIDE      = 13117            // horde
+    BG_CREATURE_ENTRY_H_SPIRITGUIDE      = 13117,            // horde
+    BG_CREATURE_ENTRY_N_VOTENPC          = 1000001          //vote npc
 };
 
 enum BattlegroundSpells
@@ -463,6 +465,7 @@ class Battleground
         bool DelObject(uint32 type);
         virtual bool AddSpiritGuide(uint32 type, float x, float y, float z, float o, TeamId teamId = TEAM_NEUTRAL);
         bool AddSpiritGuide(uint32 type, Position const& pos, TeamId teamId = TEAM_NEUTRAL);
+        bool AddVoteNpc(uint32 type, float x, float y, float z, float o, TeamId teamId = TEAM_NEUTRAL);
         int32 GetObjectType(uint64 guid);
 
         void DoorOpen(uint32 type);
@@ -497,6 +500,9 @@ class Battleground
         void CastVote(uint64 playerguid, uint8 vote);
         bool HasVoted(uint64 playerguid);
         void CalculateVoteResult(BattlegroundVotePhases VotePhase);
+        void AnnounceVoteResult(uint8 result);
+        uint64 GetVoteNPCGuid(TeamId teamId) { return teamId == TEAM_ALLIANCE ? m_VoteNPCGuidA : m_VoteNPCGuidH; }
+        void SetVoteNPCGuid(uint64 guid, TeamId teamId) { (teamId == TEAM_ALLIANCE ? m_VoteNPCGuidA : m_VoteNPCGuidH) = guid; }
 
 
     protected:
@@ -631,5 +637,7 @@ class Battleground
         Position StartPosition[BG_TEAMS_COUNT];
         float m_StartMaxDist;
         uint32 ScriptId;
+        uint64 m_VoteNPCGuidA;
+        uint64 m_VoteNPCGuidH;
 };
 #endif

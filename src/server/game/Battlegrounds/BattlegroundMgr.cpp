@@ -608,6 +608,41 @@ void BattlegroundMgr::LoadBattlegroundTemplates()
     TC_LOG_INFO("server.loading", ">> Loaded %u battlegrounds in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
 }
 
+void BattlegroundMgr::LoadBattlegroundVoteOptions()
+{
+    uint32 oldMSTime = getMSTime();
+
+    _battlegroundVoteOptions.clear();
+
+    //                                               0   1      2     3      4
+    QueryResult result = WorldDatabase.Query("SELECT id, phase, mode, value, name FROM battleground_vote_options");
+    if (!result)
+    {
+        TC_LOG_ERROR("server.loading", ">> Loaded 0 battleground vote options. DB table `battleground_vote_options` is empty.");
+        return;
+    }
+
+    uint32 count = 0;
+
+    do
+    {
+        Field* fields = result->Fetch();
+        uint8 id = fields[0].GetUInt8();
+        BattlegroundVoteOption bgvote;
+        bgvote.phase = fields[1].GetUInt8();
+        bgvote.mode = fields[2].GetInt8();
+        bgvote.value = fields[3].GetUInt8();
+        bgvote.name = fields[4].GetString();
+
+        _battlegroundVoteOptions[id] = bgvote;
+        count++;
+    }
+    while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded %u battleground vote options in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
+
+}
+
 void BattlegroundMgr::InitAutomaticArenaPointDistribution()
 {
     if (!sWorld->getBoolConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_POINTS))

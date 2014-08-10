@@ -630,9 +630,9 @@ void Battleground::CalculateVoteResult(BattlegroundVotePhases VotePhase)
 {   
     std::vector<std::pair<uint8, uint8> > VoteCount;
     uint8 i = 0;
+    BattlegroundVoteOptionMap bgvotemap = sBattlegroundMgr->GetVoteOptions();
 
-
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < bgvotemap.size(); i++)
     {
         VoteCount.push_back(std::pair<uint8, uint8>(i, 0));        
     }
@@ -669,50 +669,79 @@ void Battleground::CalculateVoteResult(BattlegroundVotePhases VotePhase)
     else
         result = VoteCount.at(0).first;
 
-    uint8 Timer = 0;
-    uint8 Objective = 0;
+    BattlegroundVoteOption const* winner = sBattlegroundMgr->GetVoteOptionById(result);
+    if (!winner)
+        return;
+    
+    uint8 winPhase = winner->phase;
+    uint8 winMode = winner->mode;
+    uint8 winValue = winner->value;
 
-    switch (VotePhase)
+    switch (winPhase)
     {
-    case BG_VOTE_PHASE_1:
-        if (result == 0)
-            SetMode(MODE_CTF);
-        else if (result == 1)
-            SetMode(MODE_TEAMDEATHMATCH);
-        else
-            SetMode(MODE_DEATHMATCH);
+    case 1:
+        SetMode(static_cast<BattlegroundModes>(winValue));
         break;
 
-    case BG_VOTE_PHASE_2:
-        if (result == 0)
-            Timer = 10;
-        else if (result == 1)
-            Timer = 20;
-        else if (result == 2)
-            Timer = 30;
-        else
-            Timer = 60;
-        SetTimeLimit(Timer);
+    case 2:
+        SetTimeLimit(winValue);
         break;
 
-    case BG_VOTE_PHASE_3:
-        if (result == 0)
-            Objective = 1;
-        else if (result == 1)
-            Objective = 3;
-        else if (result == 2)
-            Objective = 5;
-        else
-            Objective = 10;
-        SetMaxFlags(Objective);
+    case 3:
+        //TODO add kill system
+        SetMaxFlags(winValue);
         break;
 
     default:
         break;
     }
-
+    AnnounceVoteResult(result);
     BattlegroundVoteMap.clear();
 
+}
+
+void Battleground::AnnounceVoteResult(uint8 result)
+{    
+    uint64 guid = GetVoteNPCGuid(TEAM_ALLIANCE);
+    Creature* voteA = GetBgMap()->GetCreature(guid);
+    guid = GetVoteNPCGuid(TEAM_HORDE);
+    Creature* voteH = GetBgMap()->GetCreature(guid);
+    if (!voteA || !voteH)
+        return;
+    
+    
+    BattlegroundVoteOption const* winner = sBattlegroundMgr->GetVoteOptionById(result);
+    if (!winner)
+        return;
+    std::string prefix;
+    std::string resultText = winner->name;
+    uint8 VotePhase = winner->phase;
+    
+
+    switch (VotePhase)
+    {
+    case BG_VOTE_PHASE_1:
+        prefix = "The mode has been set to ";
+        break;
+
+    case BG_VOTE_PHASE_2:
+        prefix = "The time limit has been set to ";        
+        break;
+
+    case BG_VOTE_PHASE_3:
+        if (GetMode() == MODE_CTF) 
+            prefix = "The flag limit has been set to ";       
+        else
+            prefix = "The kill limit has been set to ";
+        break;
+
+    default:
+        break;
+    }
+    prefix += resultText + ".";
+    voteA->MonsterSay(prefix.c_str(), LANG_UNIVERSAL, NULL);
+    voteH->MonsterSay(prefix.c_str(), LANG_UNIVERSAL, NULL);
+    return;
 }
 
 
@@ -1607,6 +1636,18 @@ bool Battleground::DelObject(uint32 type)
     TC_LOG_ERROR("bg.battleground", "Battleground::DelObject: gameobject (type: %u, GUID: %u) not found for BG (map: %u, instance id: %u)!",
         type, GUID_LOPART(BgObjects[type]), m_MapId, m_InstanceID);
     BgObjects[type] = 0;
+    return false;
+}
+
+bool Battleground::AddVoteNpc(uint32 type, float x, float y, float z, float o, TeamId teamId /*= TEAM_NEUTRAL*/)
+{
+    uint32 entry = BG_CREATURE_ENTRY_N_VOTENPC;
+    if (Creature * creature = AddCreature(entry, type, x, y, z, o))
+    {
+        SetVoteNPCGuid(creature->GetGUID(), teamId);
+        return true;
+    }
+    EndNow();
     return false;
 }
 

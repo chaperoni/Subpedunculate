@@ -692,8 +692,8 @@ void BattlegroundWS::HandleAreaTrigger(Player* player, uint32 trigger)
 bool BattlegroundWS::SetupBattleground()
 {
     // flags
-    if (!AddObject(BG_WS_OBJECT_A_FLAG, BG_OBJECT_A_FLAG_WS_ENTRY, 1540.423f, 1481.325f, 351.8284f, 3.089233f, 0, 0, 0.9996573f, 0.02617699f, BG_WS_FLAG_RESPAWN_TIME/1000)
-        || !AddObject(BG_WS_OBJECT_H_FLAG, BG_OBJECT_H_FLAG_WS_ENTRY, 916.0226f, 1434.405f, 345.413f, 0.01745329f, 0, 0, 0.008726535f, 0.9999619f, BG_WS_FLAG_RESPAWN_TIME/1000)
+    if (!AddObject(BG_WS_OBJECT_A_FLAG, BG_OBJECT_A_FLAG_WS_ENTRY, 1540.423f, 1481.325f, 351.8284f, 3.089233f, 0, 0, 0.9996573f, 0.02617699f, BG_WS_FLAG_RESPAWN_TIME / 1000)
+        || !AddObject(BG_WS_OBJECT_H_FLAG, BG_OBJECT_H_FLAG_WS_ENTRY, 916.0226f, 1434.405f, 345.413f, 0.01745329f, 0, 0, 0.008726535f, 0.9999619f, BG_WS_FLAG_RESPAWN_TIME / 1000)
         // buffs
         || !AddObject(BG_WS_OBJECT_SPEEDBUFF_1, BG_OBJECTID_SPEEDBUFF_ENTRY, 1449.93f, 1470.71f, 342.6346f, -1.64061f, 0, 0, 0.7313537f, -0.6819983f, BUFF_RESPAWN_TIME)
         || !AddObject(BG_WS_OBJECT_SPEEDBUFF_2, BG_OBJECTID_SPEEDBUFF_ENTRY, 1005.171f, 1447.946f, 335.9032f, 1.64061f, 0, 0, 0.7313537f, 0.6819984f, BUFF_RESPAWN_TIME)
@@ -713,7 +713,7 @@ bool BattlegroundWS::SetupBattleground()
         || !AddObject(BG_WS_OBJECT_DOOR_H_2, BG_OBJECT_DOOR_H_2_WS_ENTRY, 953.0507f, 1459.842f, 340.6526f, -1.99662f, -0.1971825f, 0.1575096f, -0.8239487f, 0.5073641f, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_WS_OBJECT_DOOR_H_3, BG_OBJECT_DOOR_H_3_WS_ENTRY, 949.9523f, 1422.751f, 344.9273f, 0.0f, 0, 0, 0, 1, RESPAWN_IMMEDIATELY)
         || !AddObject(BG_WS_OBJECT_DOOR_H_4, BG_OBJECT_DOOR_H_4_WS_ENTRY, 950.7952f, 1459.583f, 342.1523f, 0.05235988f, 0, 0, 0.02617695f, 0.9996573f, RESPAWN_IMMEDIATELY)
-)
+        )
     {
         TC_LOG_ERROR("sql.sql", "BatteGroundWS: Failed to spawn some object Battleground not created!");
         return false;
@@ -730,6 +730,20 @@ bool BattlegroundWS::SetupBattleground()
     if (!sg || !AddSpiritGuide(WS_SPIRIT_MAIN_HORDE, sg->x, sg->y, sg->z, 3.193953f, TEAM_HORDE))
     {
         TC_LOG_ERROR("sql.sql", "BatteGroundWS: Failed to spawn Horde spirit guide! Battleground not created!");
+        return false;
+    }
+
+    //alliance
+    if (!AddVoteNpc(WS_VOTE_NPC, 1508.0f, 1478.0f, 352.1f, 6.27f, TEAM_ALLIANCE))
+    {
+        TC_LOG_ERROR("sql.sql", "BattleGroundWS: Failed to spawn alliance vote NPC");
+        return false;
+    }
+
+    //horde
+    if (!AddVoteNpc(WS_VOTE_NPC, 945.235f, 1434.9241f, 345.433f, 3.1f, TEAM_HORDE))
+    {
+        TC_LOG_ERROR("sql.sql", "BattleGroundWS: Failed to spawn horde vote NPC");
         return false;
     }
 

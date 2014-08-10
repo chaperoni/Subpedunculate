@@ -55,6 +55,16 @@ struct BattlegroundTemplate
     bool IsArena() const { return BattlemasterEntry->type == MAP_ARENA; }
 };
 
+struct BattlegroundVoteOption
+{
+    uint8 phase;
+    int8 mode;
+    uint8 value;
+    std::string name;
+};
+
+typedef std::map<uint8, BattlegroundVoteOption> BattlegroundVoteOptionMap;
+
 class BattlegroundMgr
 {
     private:
@@ -95,7 +105,17 @@ class BattlegroundMgr
         void LoadBattlegroundTemplates();
         void DeleteAllBattlegrounds();
 
+        void LoadBattlegroundVoteOptions();
         void SendToBattleground(Player* player, uint32 InstanceID, BattlegroundTypeId bgTypeId);
+        
+        BattlegroundVoteOptionMap GetVoteOptions() { return _battlegroundVoteOptions; }
+        BattlegroundVoteOption const* GetVoteOptionById(uint8 id)
+        {
+            BattlegroundVoteOptionMap::const_iterator itr = _battlegroundVoteOptions.find(id);
+            if (itr != _battlegroundVoteOptions.end())
+                return &itr->second;
+            return nullptr;
+        }
 
         /* Battleground queues */
         BattlegroundQueue& GetBattlegroundQueue(BattlegroundQueueTypeId bgQueueTypeId) { return m_BattlegroundQueues[bgQueueTypeId]; }
@@ -120,6 +140,7 @@ class BattlegroundMgr
 
         uint32 GetMaxRatingDifference() const;
         uint32 GetRatingDiscardTimer()  const;
+        
         void InitAutomaticArenaPointDistribution();
         void LoadBattleMastersEntry();
         void CheckBattleMasters();
@@ -150,6 +171,8 @@ class BattlegroundMgr
         bool   m_Testing;
         BattleMastersMap mBattleMastersMap;
 
+        
+
         BattlegroundTemplate const* GetBattlegroundTemplateByTypeId(BattlegroundTypeId id)
         {
             BattlegroundTemplateMap::const_iterator itr = _battlegroundTemplates.find(id);
@@ -170,8 +193,10 @@ class BattlegroundMgr
 
         typedef std::map<BattlegroundTypeId, BattlegroundTemplate> BattlegroundTemplateMap;
         typedef std::map<uint32 /*mapId*/, BattlegroundTemplate*> BattlegroundMapTemplateContainer;
+        
         BattlegroundTemplateMap _battlegroundTemplates;
         BattlegroundMapTemplateContainer _battlegroundMapTemplates;
+        BattlegroundVoteOptionMap _battlegroundVoteOptions;
 };
 
 #define sBattlegroundMgr BattlegroundMgr::instance()
