@@ -1,30 +1,24 @@
-DELETE FROM `item_enchantment_template` WHERE `entry` IN(161,162,163,382,383,384,385);
-INSERT INTO `item_enchantment_template` (`entry`, `ench`, `chance`) VALUES
-(161, 79, 51.35),
-(161, 83, 48.65),
-(162, 80, 48.65),
-(162, 83, 51.35),
-(163, 80, 44.6),
-(163, 83, 55.4),
-(382, 69, 18.7),
-(382, 79, 12.5),
-(382, 82, 18.8),
-(382, 83, 17.4),
-(382, 84, 12.8),
-(382, 85, 19.8),
-(383, 71, 35.5),
-(383, 78, 11.5),
-(383, 79, 11),
-(383, 80, 26.3),
-(383, 82, 15.7),
-(384, 71, 28.8),
-(384, 78, 24.1),
-(384, 80, 22.9),
-(384, 83, 13.6),
-(384, 85, 10.6),
-(385, 17, 13.2),
-(385, 68, 22.4),
-(385, 75, 17.6),
-(385, 84, 12.7),
-(385, 85, 10.2),
-(385, 86, 23.9);
+SET @CGUID :=    29974;
+
+DELETE FROM `creature_addon` WHERE `guid` BETWEEN @CGUID+0 AND @CGUID+2;
+DELETE FROM `creature_addon` WHERE `guid` IN (118456,118301,118183,117164);
+INSERT INTO `creature_addon` (`guid`, `mount`, `bytes1`, `bytes2`, `auras`) VALUES
+(@CGUID+0, 0, 0x10000, 0x1, '49415'), -- 27102 - 49415
+(@CGUID+1, 0, 0x10000, 0x101, '49415'), -- 26839 - 49415
+(@CGUID+2, 0, 0x10000, 0x101, '49415'), -- 26839 - 49415
+
+(118456, 0, 0x10000, 0x1, '49414'), -- 26863 - 49414
+(118301, 0, 0x10000, 0x101, '49414'), -- 26862 - 49414
+(118183, 0, 0x10000, 0x1, '49414'), -- 26860 - 49414
+(117164, 0, 0x10000, 0x1, '49414'); -- 27102 - 49414
+
+DELETE FROM `creature` WHERE `guid` BETWEEN @CGUID+0 AND @CGUID+2;
+INSERT INTO `creature` (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `spawndist`, `MovementType`) VALUES
+(@CGUID+0, 27102, 571, 1, 1, 3270.905, -2197.24, 117.4559, 4.101524, 120, 0, 0), -- 27102 (Area: 394)
+(@CGUID+1, 26839, 571, 1, 1, 3268.641, -2195.643, 117.4559, 4.34587, 120, 0, 0), -- 26839 (Area: 394)
+(@CGUID+2, 26839, 571, 1, 1, 3273.251, -2197.424, 117.4559, 4.066617, 120, 0, 0); -- 26839 (Area: 394)
+
+DELETE FROM `spell_area` WHERE `spell` IN(49417,49416) AND `area`=4206;
+INSERT INTO `spell_area` (`spell`, `area`, `quest_start`, `quest_end`, `aura_spell`, `racemask`, `gender`, `autocast`, `quest_start_status`, `quest_end_status`) VALUES 
+(49417,4206, 12431, 0, 0, 0, 2, 1, 64, 11),
+(49416,4206, 0, 12431, 0, 0, 2, 1, 64, 11);
