@@ -14333,7 +14333,18 @@ void Unit::ProcDamageAndSpellFor(bool isVictim, Unit* target, uint32 procFlag, u
 
         // Remove charge (aura can be removed by triggers)
         if (prepare && useCharges && takeCharges)
-            i->aura->DropCharge();
+        {
+            // Set charge drop delay (only for missiles)
+            if ((procExtra & PROC_EX_REFLECT) && target && procSpell && procSpell->Speed > 0.0f)
+            {
+                // Set up missile speed based delay (from Spell.cpp: Spell::AddUnitTarget()::L2237)
+                uint32 delay = uint32(std::floor(std::max<float>(target->GetDistance(this), 5.0f) / procSpell->Speed * 1000.0f));
+                // Schedule charge drop
+                i->aura->DropChargeDelayed(delay);
+            }
+            else
+                i->aura->DropCharge();
+        }
 
         i->aura->CallScriptAfterProcHandlers(aurApp, eventInfo);
 
@@ -16328,8 +16339,6 @@ void Unit::SetPhaseMask(uint32 newPhaseMask, bool update)
 
     if (IsInWorld())
     {
-        RemoveNotOwnSingleTargetAuras(newPhaseMask);            // we can lost access to caster or target
-
         // modify hostile references for new phasemask, some special cases deal with hostile references themselves
         if (GetTypeId() == TYPEID_UNIT || (!ToPlayer()->IsGameMaster() && !ToPlayer()->GetSession()->PlayerLogout()))
         {
@@ -16377,6 +16386,8 @@ void Unit::SetPhaseMask(uint32 newPhaseMask, bool update)
             if (m_SummonSlot[i])
                 if (Creature* summon = GetMap()->GetCreature(m_SummonSlot[i]))
                     summon->SetPhaseMask(newPhaseMask, true);
+
+        RemoveNotOwnSingleTargetAuras(newPhaseMask); // we can lost access to caster or target
     }
 
     // Update visibility after phasing pets and summons so they wont despawn
