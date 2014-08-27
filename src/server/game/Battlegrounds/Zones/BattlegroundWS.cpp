@@ -203,9 +203,11 @@ void BattlegroundWS::StartingEventCloseDoors()
     for (uint32 i = BG_WS_OBJECT_A_FLAG; i <= BG_WS_OBJECT_BERSERKBUFF_2; ++i)
         SpawnBGObject(i, RESPAWN_ONE_DAY);
 
-    UpdateWorldState(BG_WS_STATE_TIMER_ACTIVE, 1);
-    UpdateWorldState(BG_WS_STATE_TIMER, 25);
+    //UpdateWorldState(BG_WS_STATE_TIMER_ACTIVE, 1);
+    //UpdateWorldState(BG_WS_STATE_TIMER, 25);
 }
+
+
 
 void BattlegroundWS::StartingEventOpenDoors()
 {
@@ -266,6 +268,48 @@ void BattlegroundWS::RespawnFlag(uint32 Team, bool captured)
         PlaySoundToAll(BG_WS_SOUND_FLAGS_RESPAWNED);        // flag respawned sound...
     }
     _bothFlagsKept = false;
+}
+
+void BattlegroundWS::ProcessVoteResult(uint8 result)
+{
+    BattlegroundVoteOption const* winner = sBattlegroundMgr->GetVoteOptionById(result);
+    if (!winner)
+        return;
+
+    uint8 winPhase = winner->phase;
+    uint8 winMode = winner->mode;
+    uint8 winValue = winner->value;
+
+    switch (winPhase)
+    {
+    case 1:
+        SetMode(static_cast<BattlegroundModes>(winValue));
+        break;
+
+    case 2:
+        SetTimeLimit(winValue);
+        UpdateWorldState(BG_WS_STATE_TIMER_ACTIVE, 1);
+        break;
+
+    case 3:
+        //TODO add kill system
+        if (GetMode() == MODE_CTF)
+        {
+            UpdateWorldState(BG_WS_FLAG_CAPTURES_ALLIANCE, GetTeamScore(TEAM_ALLIANCE));
+            UpdateWorldState(BG_WS_FLAG_CAPTURES_HORDE, GetTeamScore(TEAM_HORDE));            
+            UpdateWorldState(BG_WS_FLAG_UNK_ALLIANCE, 0);
+            UpdateWorldState(BG_WS_FLAG_UNK_HORDE, 0);
+            SetMaxFlags(winValue);
+            UpdateWorldState(BG_WS_FLAG_STATE_ALLIANCE, 1);
+            UpdateWorldState(BG_WS_FLAG_STATE_HORDE, 1);               
+        }
+        break;
+
+    default:
+        break;
+    }
+    AnnounceVoteResult(result);
+    BattlegroundVoteMap.clear();
 }
 
 void BattlegroundWS::RespawnFlagAfterDrop(uint32 team)
@@ -857,42 +901,45 @@ WorldSafeLocsEntry const* BattlegroundWS::GetClosestGraveYard(Player* player)
 
 void BattlegroundWS::FillInitialWorldStates(WorldPacket& data)
 {
-    data << uint32(BG_WS_FLAG_CAPTURES_ALLIANCE) << uint32(GetTeamScore(TEAM_ALLIANCE));
-    data << uint32(BG_WS_FLAG_CAPTURES_HORDE) << uint32(GetTeamScore(TEAM_HORDE));
+    if (GetMode() == MODE_CTF)
+    {
+        data << uint32(BG_WS_FLAG_CAPTURES_ALLIANCE) << uint32(GetTeamScore(TEAM_ALLIANCE));
+        data << uint32(BG_WS_FLAG_CAPTURES_HORDE) << uint32(GetTeamScore(TEAM_HORDE));
 
-    if (_flagState[TEAM_ALLIANCE] == BG_WS_FLAG_STATE_ON_GROUND)
-        data << uint32(BG_WS_FLAG_UNK_ALLIANCE) << uint32(-1);
-    else if (_flagState[TEAM_ALLIANCE] == BG_WS_FLAG_STATE_ON_PLAYER)
-        data << uint32(BG_WS_FLAG_UNK_ALLIANCE) << uint32(1);
-    else
-        data << uint32(BG_WS_FLAG_UNK_ALLIANCE) << uint32(0);
+        if (_flagState[TEAM_ALLIANCE] == BG_WS_FLAG_STATE_ON_GROUND)
+            data << uint32(BG_WS_FLAG_UNK_ALLIANCE) << uint32(-1);
+        else if (_flagState[TEAM_ALLIANCE] == BG_WS_FLAG_STATE_ON_PLAYER)
+            data << uint32(BG_WS_FLAG_UNK_ALLIANCE) << uint32(1);
+        else
+            data << uint32(BG_WS_FLAG_UNK_ALLIANCE) << uint32(0);
 
-    if (_flagState[TEAM_HORDE] == BG_WS_FLAG_STATE_ON_GROUND)
-        data << uint32(BG_WS_FLAG_UNK_HORDE) << uint32(-1);
-    else if (_flagState[TEAM_HORDE] == BG_WS_FLAG_STATE_ON_PLAYER)
-        data << uint32(BG_WS_FLAG_UNK_HORDE) << uint32(1);
-    else
-        data << uint32(BG_WS_FLAG_UNK_HORDE) << uint32(0);
+        if (_flagState[TEAM_HORDE] == BG_WS_FLAG_STATE_ON_GROUND)
+            data << uint32(BG_WS_FLAG_UNK_HORDE) << uint32(-1);
+        else if (_flagState[TEAM_HORDE] == BG_WS_FLAG_STATE_ON_PLAYER)
+            data << uint32(BG_WS_FLAG_UNK_HORDE) << uint32(1);
+        else
+            data << uint32(BG_WS_FLAG_UNK_HORDE) << uint32(0);
 
-    data << uint32(BG_WS_FLAG_CAPTURES_MAX) << uint32(GetMaxFlags());
+        data << uint32(BG_WS_FLAG_CAPTURES_MAX) << uint32(GetMaxFlags());
+
+        if (_flagState[TEAM_HORDE] == BG_WS_FLAG_STATE_ON_PLAYER)
+            data << uint32(BG_WS_FLAG_STATE_HORDE) << uint32(2);
+        else
+            data << uint32(BG_WS_FLAG_STATE_HORDE) << uint32(1);
+
+        if (_flagState[TEAM_ALLIANCE] == BG_WS_FLAG_STATE_ON_PLAYER)
+            data << uint32(BG_WS_FLAG_STATE_ALLIANCE) << uint32(2);
+        else
+            data << uint32(BG_WS_FLAG_STATE_ALLIANCE) << uint32(1);
+    }
 
     if (GetStatus() == STATUS_IN_PROGRESS)
     {
         data << uint32(BG_WS_STATE_TIMER_ACTIVE) << uint32(1);
-        data << uint32(BG_WS_STATE_TIMER) << uint32(25-_minutesElapsed);
+        data << uint32(BG_WS_STATE_TIMER) << uint32(GetTimeLimit()-_minutesElapsed);
     }
     else
-        data << uint32(BG_WS_STATE_TIMER_ACTIVE) << uint32(0);
-
-    if (_flagState[TEAM_HORDE] == BG_WS_FLAG_STATE_ON_PLAYER)
-        data << uint32(BG_WS_FLAG_STATE_HORDE) << uint32(2);
-    else
-        data << uint32(BG_WS_FLAG_STATE_HORDE) << uint32(1);
-
-    if (_flagState[TEAM_ALLIANCE] == BG_WS_FLAG_STATE_ON_PLAYER)
-        data << uint32(BG_WS_FLAG_STATE_ALLIANCE) << uint32(2);
-    else
-        data << uint32(BG_WS_FLAG_STATE_ALLIANCE) << uint32(1);
+        data << uint32(BG_WS_STATE_TIMER_ACTIVE) << uint32(0);    
 }
 
 uint32 BattlegroundWS::GetPrematureWinner()

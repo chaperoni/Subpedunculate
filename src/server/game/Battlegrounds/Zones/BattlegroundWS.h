@@ -192,7 +192,10 @@ class BattlegroundWS : public Battleground
         /* inherited from BattlegroundClass */
         void AddPlayer(Player* player) override;
         void StartingEventCloseDoors() override;
-        void StartingEventOpenDoors() override;
+        void StartingEventOpenDoors() override;        
+
+
+        void ProcessVoteResult(uint8 result) override;
 
         /* BG Flags */
         uint64 GetFlagPickerGUID(int32 team) const override

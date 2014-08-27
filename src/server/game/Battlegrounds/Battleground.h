@@ -500,6 +500,7 @@ class Battleground
         void CastVote(uint64 playerguid, uint8 vote);
         bool HasVoted(uint64 playerguid);
         void CalculateVoteResult(BattlegroundVotePhases VotePhase);
+        virtual void ProcessVoteResult(uint8 result) { }
         void AnnounceVoteResult(uint8 result);
         uint64 GetVoteNPCGuid(TeamId teamId) { return teamId == TEAM_ALLIANCE ? m_VoteNPCGuidA : m_VoteNPCGuidH; }
         void SetVoteNPCGuid(uint64 guid, TeamId teamId) { (teamId == TEAM_ALLIANCE ? m_VoteNPCGuidA : m_VoteNPCGuidH) = guid; }

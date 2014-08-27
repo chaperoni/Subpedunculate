@@ -627,27 +627,27 @@ bool Battleground::HasVoted(uint64 playerguid)
 }
 
 void Battleground::CalculateVoteResult(BattlegroundVotePhases VotePhase)
-{   
+{
     std::vector<std::pair<uint8, uint8> > VoteCount;
     uint8 i = 0;
     BattlegroundVoteOptionMap bgvotemap = sBattlegroundMgr->GetVoteOptions();
 
     for (i = 0; i < bgvotemap.size(); i++)
     {
-        VoteCount.push_back(std::pair<uint8, uint8>(i, 0));        
+        VoteCount.push_back(std::pair<uint8, uint8>(i, 0));
     }
 
 
-    uint8 vote = 10;    
+    uint8 vote = 10;
     uint8 result = 0;
-    uint8 tieSize = 1;   
+    uint8 tieSize = 1;
 
 
     for (std::map<uint64, uint8>::const_iterator itr = BattlegroundVoteMap.begin(); itr != BattlegroundVoteMap.end(); ++itr)
     {
-        vote = itr->second;        
+        vote = itr->second;
         VoteCount.at(vote).second = VoteCount.at(vote).second + 1;
-    }    
+    }
 
     std::sort(VoteCount.begin(), VoteCount.end(),
         [](const std::pair <uint8, uint8>& lhs, const std::pair<uint8, uint8>& rhs) {return lhs.second > rhs.second; });
@@ -669,34 +669,7 @@ void Battleground::CalculateVoteResult(BattlegroundVotePhases VotePhase)
     else
         result = VoteCount.at(0).first;
 
-    BattlegroundVoteOption const* winner = sBattlegroundMgr->GetVoteOptionById(result);
-    if (!winner)
-        return;
-    
-    uint8 winPhase = winner->phase;
-    uint8 winMode = winner->mode;
-    uint8 winValue = winner->value;
-
-    switch (winPhase)
-    {
-    case 1:
-        SetMode(static_cast<BattlegroundModes>(winValue));
-        break;
-
-    case 2:
-        SetTimeLimit(winValue);
-        break;
-
-    case 3:
-        //TODO add kill system
-        SetMaxFlags(winValue);
-        break;
-
-    default:
-        break;
-    }
-    AnnounceVoteResult(result);
-    BattlegroundVoteMap.clear();
+    ProcessVoteResult(result);
 
 }
 
