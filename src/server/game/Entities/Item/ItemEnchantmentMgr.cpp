@@ -118,6 +118,38 @@ uint32 GetItemEnchantMod(int32 entry)
     return 0;
 }
 
+std::vector<ItemRandomPropertiesEntry const*> GetRandomPropertiesList(int32 itemId)
+{
+    std::vector<ItemRandomPropertiesEntry const*> enchantModList;
+    EnchantmentStore::const_iterator tab = RandomItemEnch.find(itemId);  
+
+    
+
+    for (EnchStoreList::const_iterator ench_iter = tab->second.begin(); ench_iter != tab->second.end(); ++ench_iter)
+    {
+        ItemRandomPropertiesEntry const* random_id = sItemRandomPropertiesStore.LookupEntry(ench_iter->ench);
+        enchantModList.push_back(random_id);
+    }    
+
+    return enchantModList;
+}
+
+std::vector<ItemRandomSuffixEntry const*> GetRandomSuffixList(int32 itemId)
+{
+    std::vector<ItemRandomSuffixEntry const*> enchantModList;
+    EnchantmentStore::const_iterator tab = RandomItemEnch.find(itemId);
+
+
+
+    for (EnchStoreList::const_iterator ench_iter = tab->second.begin(); ench_iter != tab->second.end(); ++ench_iter)
+    {
+        ItemRandomSuffixEntry const* random_id = sItemRandomSuffixStore.LookupEntry(ench_iter->ench);
+        enchantModList.push_back(random_id);
+    }
+
+    return enchantModList;
+}
+
 uint32 GenerateEnchSuffixFactor(uint32 item_id)
 {
     ItemTemplate const* itemProto = sObjectMgr->GetItemTemplate(item_id);

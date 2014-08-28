@@ -21,6 +21,7 @@
 //custom
 void AddSC_npc_gmtool();
 void AddSC_npc_bgvote();
+void AddSC_npc_gearvendor();
 
 //examples
 void AddSC_example_creature();
@@ -1445,6 +1446,7 @@ void AddCustomScripts()
     /* This is where custom scripts should be added. */
     AddSC_npc_gmtool();
     AddSC_npc_bgvote();
+    AddSC_npc_gearvendor();
 
 #endif
 }
