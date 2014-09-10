@@ -3662,7 +3662,7 @@ class spell_gen_gm_freeze : public SpellScriptLoader
                 if (Player* player = GetTarget()->ToPlayer())
                 {
                     // Reset player faction + allow combat + allow duels
-                    player->setFactionForRace(player->getRace());
+                    player->setFactionForTeam();
                     player->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     // save player
                     player->SaveToDB();

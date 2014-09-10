@@ -827,6 +827,7 @@ enum PlayerLoginQueryIndex
     PLAYER_LOGIN_QUERY_LOAD_INSTANCE_LOCK_TIMES     = 30,
     PLAYER_LOGIN_QUERY_LOAD_SEASONAL_QUEST_STATUS   = 31,
     PLAYER_LOGIN_QUERY_LOAD_MONTHLY_QUEST_STATUS    = 32,
+    PLAYER_LOGIN_QUERY_LOAD_CUSTOM                  = 33,
     MAX_PLAYER_LOGIN_QUERY
 };
 
@@ -1929,7 +1930,7 @@ class Player : public Unit, public GridObject<Player>
         static uint32 TeamForRace(uint8 race);
         uint32 GetTeam() const { return m_team; }
         TeamId GetTeamId() const { return m_team == ALLIANCE ? TEAM_ALLIANCE : TEAM_HORDE; }
-        void setFactionForRace(uint8 race);
+        void setFactionForTeam();
 
         void InitDisplayIds();
 

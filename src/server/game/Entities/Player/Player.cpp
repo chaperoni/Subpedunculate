@@ -993,8 +993,8 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     uint8 powertype = cEntry->powerType;
 
     SetObjectScale(1.0f);
-
-    setFactionForRace(createInfo->Race);
+    m_team = 0;
+    setFactionForTeam();
 
     if (!IsValidGender(createInfo->Gender))
     {
@@ -2837,7 +2837,7 @@ void Player::SetGameMaster(bool on)
         SetPhaseMask(newPhase, false);
 
         m_ExtraFlags &= ~ PLAYER_EXTRA_GM_ON;
-        setFactionForRace(getRace());
+        setFactionForTeam();
         RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_GM);
         RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_ALLOW_CHEAT_SPELLS);
 
@@ -6888,12 +6888,27 @@ uint32 Player::TeamForRace(uint8 race)
     return ALLIANCE;
 }
 
-void Player::setFactionForRace(uint8 race)
+void Player::setFactionForTeam()
 {
-    m_team = TeamForRace(race);
+    //m_team = TeamForRace(race);
 
-    ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(race);
-    setFaction(rEntry ? rEntry->FactionID : 0);
+    uint32 faction;
+    switch (m_team)
+    {
+    case ALLIANCE:
+        faction = 1;
+        break;
+    case HORDE:
+        faction = 2;
+        break;
+    case TEAM_OTHER:
+        faction = 35;
+        break;
+    default:
+        faction = 1;
+
+    }
+    setFaction(faction);
 }
 
 ReputationRank Player::GetReputationRank(uint32 faction) const
@@ -17158,6 +17173,14 @@ bool Player::LoadFromDB(uint32 guid, SQLQueryHolder *holder)
         return false;
     }
 
+    PreparedQueryResult result2 = holder->GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_CUSTOM);
+    if (!result2)
+    {
+        std::string name = "<unknown>";
+        sObjectMgr->GetPlayerNameByGUID(guid, name);
+        TC_LOG_ERROR("entities.player", "Player %s (GUID: %u) not found in table `hcl_characters_extra`, can't load. ", name.c_str(), guid);
+        return false;
+    }
     Field* fields = result->Fetch();
 
     uint32 dbAccountId = fields[1].GetUInt32();
@@ -17265,7 +17288,11 @@ bool Player::LoadFromDB(uint32 guid, SQLQueryHolder *holder)
 
     //Need to call it to initialize m_team (m_team can be calculated from race)
     //Other way is to saves m_team into characters table.
-    setFactionForRace(getRace());
+    Field* fields2 = result2->Fetch();
+
+    m_team = fields2[1].GetUInt32();
+    setFactionForTeam();
+    
 
     // load home bind and check in same time class/race pair, it used later for restore broken positions
     if (!_LoadHomeBind(holder->GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_HOME_BIND)))
@@ -19173,10 +19200,17 @@ void Player::SaveToDB(bool create /*=false*/)
         sScriptMgr->OnPlayerSave(this);
 
     PreparedStatement* stmt = NULL;
+    PreparedStatement* stmt2 = nullptr;
     uint8 index = 0;
 
     if (create)
     {
+        //hcl4 debug factions
+        stmt2 = CharacterDatabase.GetPreparedStatement(CHAR_CUST_INS_CHARACTER_EXTRA);        
+        stmt2->setUInt32(index++, GetGUIDLow());
+        stmt2->setUInt16(index++, TeamForRace(getRace()));
+
+        index = 0;
         //! Insert query
         /// @todo: Filter out more redundant fields that can take their default value at player create
         stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_CHARACTER);
@@ -19411,6 +19445,8 @@ void Player::SaveToDB(bool create /*=false*/)
     SQLTransaction trans = CharacterDatabase.BeginTransaction();
 
     trans->Append(stmt);
+    if (create)
+        trans->Append(stmt2);
 
     if (m_mailsUpdated)                                     //save mails only when needed
         _SaveMail(trans);

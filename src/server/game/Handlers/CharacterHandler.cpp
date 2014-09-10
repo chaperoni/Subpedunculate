@@ -204,6 +204,10 @@ bool LoginQueryHolder::Initialize()
     stmt->setUInt32(0, m_accountId);
     res &= SetPreparedQuery(PLAYER_LOGIN_QUERY_LOAD_INSTANCE_LOCK_TIMES, stmt);
 
+    stmt = CharacterDatabase.GetPreparedStatement(CHAR_CUST_SEL_CHARACTER_EXTRA);
+    stmt->setUInt32(0, lowGuid);
+    res &= SetPreparedQuery(PLAYER_LOGIN_QUERY_LOAD_CUSTOM, stmt);
+
     return res;
 }
 
