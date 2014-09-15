@@ -38,7 +38,7 @@ void Koth::Reset(bool init)
         m_maxFighters = 2;
         m_Exec = false;
         m_WaitingCount = 0;
-        m_fighterCount = 0;        
+        m_fighterCount = 0;
     }
 
     for (uint8 i = KOTH_FIGHTER_CHALLENGER_1; i < m_maxFighters; i++)
@@ -50,8 +50,8 @@ void Koth::Reset(bool init)
         player->SetInvitedForKoth(false);
     }
     SetState(KOTH_STATE_WAITING);
-    
-    
+
+
 }
 
 KothQueueInfo Koth::QueueAddPlayer(Player* player)
@@ -93,7 +93,7 @@ void Koth::QueueRemovePlayer(uint64 guid)
 bool Koth::QueueInvitePlayer(uint64 guid, uint8 slot)
 {
     KothQueuedPlayersMap::iterator itr = m_QueuedPlayers.find(guid); //guaranteed to be in queue
-    
+
     KothQueueInfo& kinfo = itr->second;
     Player* player = sObjectAccessor->FindPlayer(itr->first);
     if (!kinfo.IsInvited())
@@ -108,7 +108,7 @@ bool Koth::QueueInvitePlayer(uint64 guid, uint8 slot)
 
         std::string str = "invited to slot " + std::to_string(slot);
         //TODO notify player of invite
-        player->MonsterSay(str.c_str(), LANG_UNIVERSAL, NULL);
+        player->Say(str.c_str(), LANG_UNIVERSAL, NULL);
         SetFighterGUID(player->GetGUID(), slot);
         IncreaseWaitingCount();
         return true;
@@ -121,7 +121,7 @@ void Koth::PlayerInviteResponse(Player* player, bool accept)
     KothQueuedPlayersMap::iterator itr = m_QueuedPlayers.find(player->GetGUID());
     if (itr == m_QueuedPlayers.end())
         return;
-    
+
     KothQueueInfo& kinfo = itr->second;
     if (!kinfo.IsInvited())
         return;
@@ -139,7 +139,7 @@ void Koth::PlayerInviteResponse(Player* player, bool accept)
         DecreaseWaitingCount();
         SetFighterGUID(0, kinfo.InvitedSlot - 1);
     }
-        
+
     player->SetInvitedForKoth(false);
     kinfo.InvitedSlot = 0;
     QueueRemovePlayer(player->GetGUID());
@@ -172,7 +172,7 @@ void Koth::KothQueueUpdate(uint32 diff)
 
         //Get person in queue the longest
         KothRQueuedPlayersMap::iterator itr;
-        
+
         //Check if there are slots to fill
         if (m_WaitingCount < m_maxFighters)
         {
@@ -205,7 +205,7 @@ void Koth::ArenaAddPlayer(Player* player, uint8 slot)
 bool Koth::PrepareArena()
 {
     Player* player = nullptr;
-    uint8 offlineCount = 0;    
+    uint8 offlineCount = 0;
     for (uint8 i = 0; i < m_fighterCount; i++)
     {
         player = sObjectAccessor->FindPlayer(m_fighterGUIDs[i]);
@@ -213,10 +213,10 @@ bool Koth::PrepareArena()
         if (!player)
         {
             SetFighterGUID(0, i);
-            offlineCount++;           
+            offlineCount++;
             continue;
         }
-        player->MonsterSay("hooray", LANG_UNIVERSAL, NULL);
+        player->Say("hooray", LANG_UNIVERSAL, NULL);
 
     }
     if (offlineCount == 0)
@@ -229,7 +229,7 @@ void Koth::Debug(Player* player, uint8 mode)
 {
     if (m_QueuedPlayers.empty())
     {
-        player->MonsterSay("Queue empty", LANG_UNIVERSAL, NULL);
+        player->Say("Queue empty", LANG_UNIVERSAL, NULL);
         return;
     }
     KothQueuedPlayersMap::iterator itr;
@@ -249,7 +249,7 @@ void Koth::Debug(Player* player, uint8 mode)
             std::stringstream fmt;
             fmt << "Name: " << name << " Jointime: " << JoinTime << " Invited: " << IsInvited;
             info = fmt.str();
-            player->MonsterSay(info.c_str(), LANG_UNIVERSAL, NULL);
+            player->Say(info.c_str(), LANG_UNIVERSAL, NULL);
         }
         break;
 
@@ -268,7 +268,7 @@ bool KothQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
         sKothMgr->DecreaseWaitingCount();
         return true;
     }
-        
+
 
     if (!player->IsInvitedForKoth()) //player responded to invite queue manually
         return true;
@@ -276,7 +276,7 @@ bool KothQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     sKothMgr->PlayerInviteResponse(player, false);
 
     //TODO notify player of invitation expiration
-    player->MonsterSay("Invite expired", LANG_UNIVERSAL, NULL);
+    player->Say("Invite expired", LANG_UNIVERSAL, NULL);
     return true;
 
 }
@@ -303,9 +303,9 @@ bool KothArenaTimeExpire::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     for (i = KOTH_FIGHTER_KING; i < sKothMgr->GetMaxFighters(); i++)
     {
         if (sKothMgr->GetFighterGUID(i) == 0)
-            continue;        
+            continue;
         Player* player = sObjectAccessor->FindPlayer(sKothMgr->GetFighterGUID(i));
-        player->MonsterSay("woop", LANG_UNIVERSAL, NULL);
+        player->Say("woop", LANG_UNIVERSAL, NULL);
         if (i > KOTH_FIGHTER_KING) //need to reorder
         {
             sKothMgr->SetFighterGUID(0, i);
@@ -315,7 +315,7 @@ bool KothArenaTimeExpire::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
         sKothMgr->IncreaseWaitingCount();
         break;
     }
-    
+
     return true;
 }
 

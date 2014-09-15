@@ -2341,7 +2341,7 @@ class Player : public Unit, public GridObject<Player>
         std::string GetCoordsMapAreaAndZoneString();
 
         bool IsLoading() const;
-        
+
         void RemoveKothFighterSlot() { m_kothFighterSlot = 0; }
         bool IsInvitedForKoth() { return m_IsInvitedForKoth; }
 

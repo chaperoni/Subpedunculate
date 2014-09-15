@@ -33,20 +33,20 @@ enum KothTimeIntervals
 };
 
 struct KothQueueInfo
-{    
+{
     uint32 LastOnlineTime;
     uint32 JoinTime;
     uint32 RemoveInviteTime;
     uint8 InvitedSlot;
     bool IsInvited() { return InvitedSlot > 0; }
-    
+
 };
 
 class Koth
 {
-    
+
 private:
-    Koth();    
+    Koth();
     ~Koth();
 
 public:
@@ -71,7 +71,7 @@ public:
     void Reset(bool init);
 
     KothStates GetKothState() { return KothState; }
-    
+
     //Queue
     void KothQueueUpdate(uint32 diff);
     KothQueueInfo QueueAddPlayer(Player* player);
@@ -83,9 +83,6 @@ public:
     void SetState(KothStates state) { KothState = state; }
     void IncreaseWaitingCount() { m_WaitingCount++; }
     void DecreaseWaitingCount() { m_WaitingCount--; }
-
-    
-
 
     //Arena
     void IncreaseFighterCount() { m_fighterCount++ ; }
@@ -99,13 +96,11 @@ public:
     void ArenaRemovePlayer(Player* player);
 
     bool PrepareArena();
-    
-
 
     //debug
     void Debug(Player* player, uint8 mode);
     bool m_Exec;
-private:    
+private:
     std::vector<uint64> m_fighterGUIDs;
     uint8 m_streak;
     uint8 m_fighterCount;

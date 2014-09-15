@@ -674,22 +674,22 @@ void Battleground::CalculateVoteResult(BattlegroundVotePhases VotePhase)
 }
 
 void Battleground::AnnounceVoteResult(uint8 result)
-{    
+{
     uint64 guid = GetVoteNPCGuid(TEAM_ALLIANCE);
     Creature* voteA = GetBgMap()->GetCreature(guid);
     guid = GetVoteNPCGuid(TEAM_HORDE);
     Creature* voteH = GetBgMap()->GetCreature(guid);
     if (!voteA || !voteH)
         return;
-    
-    
+
+
     BattlegroundVoteOption const* winner = sBattlegroundMgr->GetVoteOptionById(result);
     if (!winner)
         return;
     std::string prefix;
     std::string resultText = winner->name;
     uint8 VotePhase = winner->phase;
-    
+
 
     switch (VotePhase)
     {
@@ -698,12 +698,12 @@ void Battleground::AnnounceVoteResult(uint8 result)
         break;
 
     case BG_VOTE_PHASE_2:
-        prefix = "The time limit has been set to ";        
+        prefix = "The time limit has been set to ";
         break;
 
     case BG_VOTE_PHASE_3:
-        if (GetMode() == MODE_CTF) 
-            prefix = "The flag limit has been set to ";       
+        if (GetMode() == MODE_CTF)
+            prefix = "The flag limit has been set to ";
         else
             prefix = "The kill limit has been set to ";
         break;
@@ -712,8 +712,8 @@ void Battleground::AnnounceVoteResult(uint8 result)
         break;
     }
     prefix += resultText + ".";
-    voteA->MonsterSay(prefix.c_str(), LANG_UNIVERSAL, NULL);
-    voteH->MonsterSay(prefix.c_str(), LANG_UNIVERSAL, NULL);
+    voteA->Say(prefix.c_str(), LANG_UNIVERSAL, NULL);
+    voteH->Say(prefix.c_str(), LANG_UNIVERSAL, NULL);
     return;
 }
 

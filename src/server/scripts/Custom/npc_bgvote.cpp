@@ -19,7 +19,7 @@ class npc_bgvote : public CreatureScript
 public:
     npc_bgvote() : CreatureScript("npc_bgvote") { }
 
-   
+
     void CreateVoteOptionsList(Player* player)
     {
         Battleground* bg = player->GetBattleground();
@@ -27,7 +27,7 @@ public:
             return;
         uint8 id;
         uint8 phase;
-        int8 mode;        
+        int8 mode;
         std::string name;
         BattlegroundVoteOptionMap bgvotemap = sBattlegroundMgr->GetVoteOptions();
         for (BattlegroundVoteOptionMap::const_iterator itr = bgvotemap.begin(); itr != bgvotemap.end(); ++itr)
@@ -51,9 +51,9 @@ public:
 
             if (bg->HasVoted(player->GetGUID()))
             {
-                creature->MonsterWhisper("You have already voted on this phase.", player);
+                creature->Whisper("You have already voted on this phase.", LANG_UNIVERSAL, player);
                 return true;
-            }         
+            }
             CreateVoteOptionsList(player);
             player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
         }
@@ -63,7 +63,7 @@ public:
 
     bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) override
     {
-        player->PlayerTalkClass->ClearMenus();                  
+        player->PlayerTalkClass->ClearMenus();
         Battleground* bg = player->GetBattleground();
 
         if (!bg)
@@ -72,13 +72,11 @@ public:
         BattlegroundVoteOption const* bgvote = sBattlegroundMgr->GetVoteOptionById(action);
         if (!bgvote)
             return false;
-        if (bgvote->phase != bg->GetVotePhase())        
-            creature->MonsterWhisper("The voting period for that vote has closed. Please cast a new vote.", player);                 
+        if (bgvote->phase != bg->GetVotePhase())
+            creature->Whisper("The voting period for that vote has closed. Please cast a new vote.", LANG_UNIVERSAL, player);
         else if (!bg->HasVoted(player->GetGUID()))
             bg->CastVote(player->GetGUID(), action);
-      
         player->CLOSE_GOSSIP_MENU();
-        
         return true;
     };
 

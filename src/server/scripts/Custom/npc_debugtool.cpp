@@ -58,7 +58,7 @@ public:
                 std::string name = sObjectMgr->GetItemTemplate(item->GetEntry())->Name1;
                 std::string text = std::to_string(suffixfactor);
                 name = name + " = " + text;
-                creature->MonsterSay(name.c_str(), LANG_UNIVERSAL, NULL);
+                creature->Say(name.c_str(), LANG_UNIVERSAL, NULL);
             }
             break;
 
