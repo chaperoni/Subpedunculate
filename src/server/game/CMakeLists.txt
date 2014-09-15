@@ -30,6 +30,7 @@ file(GLOB_RECURSE sources_Groups Groups/*.cpp Groups/*.h)
 file(GLOB_RECURSE sources_Guilds Guilds/*.cpp Guilds/*.h)
 file(GLOB_RECURSE sources_Handlers Handlers/*.cpp Handlers/*.h)
 file(GLOB_RECURSE sources_Instances Instances/*.cpp Instances/*.h)
+file(GLOB_RECURSE sources_Koth Koth/*.cpp Koth/*.h)
 file(GLOB_RECURSE sources_Loot Loot/*.cpp Loot/*.h)
 file(GLOB_RECURSE sources_Mails Mails/*.cpp Mails/*.h)
 file(GLOB_RECURSE sources_Maps Maps/*.cpp Maps/*.h)
@@ -81,6 +82,7 @@ set(game_STAT_SRCS
   ${sources_Guilds}
   ${sources_Handlers}
   ${sources_Instances}
+  ${sources_Koth}
   ${sources_Loot}
   ${sources_Mails}
   ${sources_Maps}
@@ -174,6 +176,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/Guilds
   ${CMAKE_CURRENT_SOURCE_DIR}/Handlers
   ${CMAKE_CURRENT_SOURCE_DIR}/Instances
+  ${CMAKE_CURRENT_SOURCE_DIR}/Koth
   ${CMAKE_CURRENT_SOURCE_DIR}/Loot
   ${CMAKE_CURRENT_SOURCE_DIR}/Mails
   ${CMAKE_CURRENT_SOURCE_DIR}/Maps

@@ -21,6 +21,7 @@
 //custom
 void AddSC_npc_gmtool();
 void AddSC_npc_bgvote();
+void AddSC_npc_debugtool();
 void AddSC_npc_gearvendor();
 
 //examples
@@ -1449,6 +1450,7 @@ void AddCustomScripts()
     AddSC_npc_gmtool();
     AddSC_npc_bgvote();
     AddSC_npc_gearvendor();
+    AddSC_npc_debugtool();
 
 #endif
 }

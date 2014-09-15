@@ -115,6 +115,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/src/server/game/Instances
   ${CMAKE_SOURCE_DIR}/src/server/game/LookingForGroup
   ${CMAKE_SOURCE_DIR}/src/server/game/Loot
+  ${CMAKE_SOURCE_DIR}/src/server/game/Koth
   ${CMAKE_SOURCE_DIR}/src/server/game/Mails
   ${CMAKE_SOURCE_DIR}/src/server/game/Miscellaneous
   ${CMAKE_SOURCE_DIR}/src/server/game/Maps

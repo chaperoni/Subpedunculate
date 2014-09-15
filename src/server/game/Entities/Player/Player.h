@@ -2341,6 +2341,12 @@ class Player : public Unit, public GridObject<Player>
         std::string GetCoordsMapAreaAndZoneString();
 
         bool IsLoading() const;
+        
+        void RemoveKothFighterSlot() { m_kothFighterSlot = 0; }
+        bool IsInvitedForKoth() { return m_IsInvitedForKoth; }
+
+        void SetInvitedForKoth(bool invited) { m_IsInvitedForKoth = invited; }
+        void SetKothFighterSlot(uint8 slot) { m_kothFighterSlot = slot + 1; }
 
     protected:
         // Gamemaster whisper whitelist
@@ -2348,6 +2354,9 @@ class Player : public Unit, public GridObject<Player>
         uint32 m_regenTimerCount;
         float m_powerFraction[MAX_POWERS];
         uint32 m_contestedPvPTimer;
+
+        bool m_IsInvitedForKoth;
+        uint8 m_kothFighterSlot;
 
         /*********************************************************/
         /***               BATTLEGROUND SYSTEM                 ***/

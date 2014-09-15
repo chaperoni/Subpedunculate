@@ -44,6 +44,7 @@
 #include "InstanceSaveMgr.h"
 #include "Language.h"
 #include "LFGMgr.h"
+#include "Koth.h"
 #include "MapManager.h"
 #include "Memory.h"
 #include "MMapFactory.h"
@@ -2082,6 +2083,9 @@ void World::Update(uint32 diff)
 
     sBattlegroundMgr->Update(diff);
     RecordTimeDiff("UpdateBattlegroundMgr");
+
+    sKothMgr->KothQueueUpdate(diff);
+    RecordTimeDiff("UpdateKoth");
 
     sOutdoorPvPMgr->Update(diff);
     RecordTimeDiff("UpdateOutdoorPvPMgr");
