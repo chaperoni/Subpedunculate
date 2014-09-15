@@ -494,6 +494,9 @@ class Battleground
 
         virtual uint32 GetPrematureWinner();
 
+        // because BattleGrounds with different types and same level range has different m_BracketId
+        uint8 GetUniqueBracketId() const;
+               
         //vote
         std::map<uint64, uint8> BattlegroundVoteMap;
         void CastVote(uint64 playerguid, uint8 vote);
