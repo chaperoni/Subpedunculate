@@ -70,8 +70,9 @@ public:
 
             else if (sKothMgr->m_QueuedPlayers.find(player->GetGUID()) != sKothMgr->m_QueuedPlayers.end())
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_LEAVE, 0, 5);
-            else
+            else if (!player->GetKothFighterSlot())
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_QUEUE, 0, 4);
+
 
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_INFO, 0, 3);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_EDIT, 1, 3);
