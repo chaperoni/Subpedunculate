@@ -2344,6 +2344,7 @@ class Player : public Unit, public GridObject<Player>
 
         void RemoveKothFighterSlot() { m_kothFighterSlot = 0; }
         bool IsInvitedForKoth() { return m_IsInvitedForKoth; }
+        uint8 GetKothFighterSlot() { return m_kothFighterSlot; }
 
         void SetInvitedForKoth(bool invited) { m_IsInvitedForKoth = invited; }
         void SetKothFighterSlot(uint8 slot) { m_kothFighterSlot = slot + 1; }

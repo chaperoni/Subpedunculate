@@ -33,8 +33,7 @@ public:
 
     typedef std::map<uint64, KothQueueInfo> KothQueuedPlayersMap;
     bool OnGossipHello(Player* player, Creature* creature) override
-    {
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_ITEM_SUFFIXFACTOR, 0, 1);
+    {        
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH, 0, 2);
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_CLOSE, 0, 0);
         player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());

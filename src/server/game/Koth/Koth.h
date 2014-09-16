@@ -29,7 +29,7 @@ enum KothFighters
 enum KothTimeIntervals
 {
     KOTH_INVITE_ACCEPT_TIME = 10000,
-    KOTH_ARENA_TIME_LIMIT = 15000
+    KOTH_ARENA_TIME_LIMIT = 5000
 };
 
 struct KothQueueInfo
@@ -74,7 +74,7 @@ public:
 
     //Queue
     void KothQueueUpdate(uint32 diff);
-    KothQueueInfo QueueAddPlayer(Player* player);
+    void QueueAddPlayer(Player* player);
     void QueueRemovePlayer(uint64 guid);
 
     //invites

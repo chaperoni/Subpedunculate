@@ -54,8 +54,12 @@ void Koth::Reset(bool init)
 
 }
 
-KothQueueInfo Koth::QueueAddPlayer(Player* player)
+void Koth::QueueAddPlayer(Player* player)
 {
+    if (player->GetKothFighterSlot() || player->IsInvitedForKoth())
+        return;
+        
+
     KothQueueInfo& kinfo = m_QueuedPlayers[player->GetGUID()];
     kinfo.JoinTime = getMSTime();
     kinfo.LastOnlineTime = getMSTime();
@@ -66,7 +70,7 @@ KothQueueInfo Koth::QueueAddPlayer(Player* player)
 
     m_RQueuedPlayers[kitr] = player->GetGUID();
 
-    return kinfo;
+    return;
 }
 
 void Koth::QueueRemovePlayer(uint64 guid)
@@ -108,7 +112,7 @@ bool Koth::QueueInvitePlayer(uint64 guid, uint8 slot)
 
         std::string str = "invited to slot " + std::to_string(slot);
         //TODO notify player of invite
-        player->Say(str.c_str(), LANG_UNIVERSAL, NULL);
+        player->Say(str, LANG_UNIVERSAL);
         SetFighterGUID(player->GetGUID(), slot);
         IncreaseWaitingCount();
         return true;
@@ -199,6 +203,7 @@ void Koth::KothQueueUpdate(uint32 diff)
 void Koth::ArenaAddPlayer(Player* player, uint8 slot)
 {
     m_fighterCount++;
+    player->SetKothFighterSlot(slot + 1);
     //stuff
 }
 
@@ -216,7 +221,7 @@ bool Koth::PrepareArena()
             offlineCount++;
             continue;
         }
-        player->Say("hooray", LANG_UNIVERSAL, NULL);
+        player->Say("hooray", LANG_UNIVERSAL);
 
     }
     if (offlineCount == 0)
@@ -227,11 +232,7 @@ bool Koth::PrepareArena()
 
 void Koth::Debug(Player* player, uint8 mode)
 {
-    if (m_QueuedPlayers.empty())
-    {
-        player->Say("Queue empty", LANG_UNIVERSAL, NULL);
-        return;
-    }
+    
     KothQueuedPlayersMap::iterator itr;
     KothRQueuedPlayersMap::iterator ritr;
     std::string name;
@@ -241,6 +242,11 @@ void Koth::Debug(Player* player, uint8 mode)
     switch (mode)
     {
     case 0:
+        if (m_QueuedPlayers.empty())
+        {
+            player->Say("Queue empty", LANG_UNIVERSAL);
+            return;
+        }
         for (itr = m_QueuedPlayers.begin(); itr != m_QueuedPlayers.end(); itr++)
         {
             name = sObjectAccessor->FindPlayer(itr->first)->GetName();
@@ -249,13 +255,14 @@ void Koth::Debug(Player* player, uint8 mode)
             std::stringstream fmt;
             fmt << "Name: " << name << " Jointime: " << JoinTime << " Invited: " << IsInvited;
             info = fmt.str();
-            player->Say(info.c_str(), LANG_UNIVERSAL, NULL);
+            player->Say(info, LANG_UNIVERSAL);
         }
         break;
 
     case 1:
         Reset(true);
         m_maxFighters = urand(2, 4);
+        player->Say(std::to_string(m_maxFighters), LANG_UNIVERSAL);
         break;
     }
 }
@@ -276,7 +283,7 @@ bool KothQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     sKothMgr->PlayerInviteResponse(player, false);
 
     //TODO notify player of invitation expiration
-    player->Say("Invite expired", LANG_UNIVERSAL, NULL);
+    player->Say("Invite expired", LANG_UNIVERSAL);
     return true;
 
 }
@@ -293,9 +300,13 @@ bool KothArenaTimeExpire::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     //simulate winner
     uint8 i = 0;
     uint8 winner = 0;
+    Player* player = nullptr;
     for (i = 0; i < sKothMgr->GetMaxFighters() - 1; i++)
     {
         winner = urand(0, sKothMgr->GetFighterCount() - 1);
+        player = sObjectAccessor->FindPlayer(sKothMgr->GetFighterGUID(i));
+        player->Say("aww", LANG_UNIVERSAL);
+        player->RemoveKothFighterSlot();
         sKothMgr->SetFighterGUID(0, winner);
         sKothMgr->DecreaseFighterCount();
     }
@@ -304,8 +315,8 @@ bool KothArenaTimeExpire::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     {
         if (sKothMgr->GetFighterGUID(i) == 0)
             continue;
-        Player* player = sObjectAccessor->FindPlayer(sKothMgr->GetFighterGUID(i));
-        player->Say("woop", LANG_UNIVERSAL, NULL);
+        player = sObjectAccessor->FindPlayer(sKothMgr->GetFighterGUID(i));
+        player->Say("woop", LANG_UNIVERSAL);
         if (i > KOTH_FIGHTER_KING) //need to reorder
         {
             sKothMgr->SetFighterGUID(0, i);
