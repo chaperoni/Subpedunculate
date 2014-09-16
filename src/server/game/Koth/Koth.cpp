@@ -25,7 +25,17 @@ void Koth::Reset(bool init)
             player->RemoveKothFighterSlot();
             player->SetInvitedForKoth(false);
         }
-
+        if (m_QueuedPlayers.size() > 0)
+        {
+            for (uint8 i = KOTH_FIGHTER_KING; i < KOTH_FIGHTER_MAX; i++)
+            {
+                player = sObjectAccessor->FindPlayer(GetFighterGUID(i));
+                if (!player)
+                    continue;
+                player->RemoveKothFighterSlot();
+                player->SetInvitedForKoth(false);
+            }
+        }
 
         m_QueuedPlayers.clear();
         m_RQueuedPlayers.clear();
@@ -33,7 +43,7 @@ void Koth::Reset(bool init)
 
         for (uint8 i = KOTH_FIGHTER_KING; i < KOTH_FIGHTER_MAX; i++)
         {
-            m_fighterGUIDs.push_back(0);
+            m_fighterGUIDs.push_back(0);            
         }
         m_maxFighters = 2;
         m_Exec = false;
@@ -298,35 +308,27 @@ bool KothArenaTimeExpire::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     if (sKothMgr->GetKothState() != KOTH_STATE_PREMATCH)
         return true;
     //simulate winner
-    uint8 i = 0;
-    uint8 winner = 0;
+    uint8 i = 0;    
     Player* player = nullptr;
-    for (i = 0; i < sKothMgr->GetMaxFighters() - 1; i++)
+    uint8 fightercount = sKothMgr->GetFighterCount();
+    uint8 rand = urand(0, fightercount - 1);
+    Player* winner = sObjectAccessor->FindPlayer(sKothMgr->GetFighterGUID(rand));    
+    for (i = 0; i < sKothMgr->GetMaxFighters(); i++)
     {
-        winner = urand(0, sKothMgr->GetFighterCount() - 1);
         player = sObjectAccessor->FindPlayer(sKothMgr->GetFighterGUID(i));
-        player->Say("aww", LANG_UNIVERSAL);
-        player->RemoveKothFighterSlot();
-        sKothMgr->SetFighterGUID(0, winner);
+        if (player)
+            player->RemoveKothFighterSlot();
+        sKothMgr->SetFighterGUID(0, i);
         sKothMgr->DecreaseFighterCount();
     }
 
-    for (i = KOTH_FIGHTER_KING; i < sKothMgr->GetMaxFighters(); i++)
-    {
-        if (sKothMgr->GetFighterGUID(i) == 0)
-            continue;
-        player = sObjectAccessor->FindPlayer(sKothMgr->GetFighterGUID(i));
-        player->Say("woop", LANG_UNIVERSAL);
-        if (i > KOTH_FIGHTER_KING) //need to reorder
-        {
-            sKothMgr->SetFighterGUID(0, i);
-            sKothMgr->SetFighterGUID(player->GetGUID(), KOTH_FIGHTER_KING);
-        }
-        sKothMgr->Reset(false);
-        sKothMgr->IncreaseWaitingCount();
-        break;
-    }
+    winner->SetKothFighterSlot(KOTH_FIGHTER_KING);
+    winner->Say("woop", LANG_UNIVERSAL);
+    sKothMgr->SetFighterGUID(winner->GetGUID(), KOTH_FIGHTER_KING);
+    sKothMgr->IncreaseWaitingCount();
+    sKothMgr->IncreaseFighterCount();
 
+    sKothMgr->Reset(false);
     return true;
 }
 
