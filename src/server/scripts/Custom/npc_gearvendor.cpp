@@ -37,7 +37,7 @@ public:
         {            
             std::vector<ItemRandomPropertiesEntry const*> enchantModList = GetRandomPropertiesList(itemp->RandomProperty);
             std::sort(enchantModList.begin(), enchantModList.end(),
-                [](ItemRandomPropertiesEntry const* &lhs, ItemRandomPropertiesEntry const* &rhs)
+                [](ItemRandomPropertiesEntry const* lhs, ItemRandomPropertiesEntry const* rhs)
             { 
                 std::string name1 = lhs->nameSuffix[0];
                 std::string name2 = rhs->nameSuffix[0];
@@ -71,7 +71,7 @@ public:
         {
             std::vector<ItemRandomSuffixEntry const*> enchantModList = GetRandomSuffixList(itemp->RandomSuffix);
             std::sort(enchantModList.begin(), enchantModList.end(),
-                [](ItemRandomSuffixEntry const* &lhs, ItemRandomSuffixEntry const* &rhs)
+                [](ItemRandomSuffixEntry const* lhs, ItemRandomSuffixEntry const* rhs)
             {
                 std::string name1 = lhs->nameSuffix[0];
                 std::string name2 = rhs->nameSuffix[0];
