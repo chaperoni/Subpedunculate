@@ -12,6 +12,29 @@ Koth::~Koth()
 
 }
 
+void Koth::SendMessageToQueue(std::string text)
+{
+	WorldPacket data;
+	ChatHandler::BuildChatPacket(data, CHAT_MSG_SYSTEM, LANG_UNIVERSAL, NULL, NULL, text);
+	Player* player = nullptr;
+	for (KothQueuedPlayersMap::iterator itr = m_QueuedPlayers.begin(); itr != m_QueuedPlayers.end(); itr++)
+	{
+		player = sObjectAccessor->FindPlayer(itr->first);
+		if (!player) //offline
+			continue;
+		player->GetSession()->SendPacket(&data);
+	}
+}
+
+void Koth::SendMessageToPlayer(Player* player, std::string text)
+{
+	if (!player)
+		return;
+	WorldPacket data;
+	ChatHandler::BuildChatPacket(data, CHAT_MSG_SYSTEM, LANG_UNIVERSAL, NULL, NULL, text);
+	player->GetSession()->SendPacket(&data);
+}
+
 void Koth::Reset(bool init)
 {
     Player* player = nullptr;
@@ -60,15 +83,13 @@ void Koth::Reset(bool init)
         player->SetInvitedForKoth(false);
     }
     SetState(KOTH_STATE_WAITING);
-
-
+	
 }
 
 void Koth::QueueAddPlayer(Player* player)
 {
     if (player->GetKothFighterSlot() || player->IsInvitedForKoth())
-        return;
-        
+        return;        
 
     KothQueueInfo& kinfo = m_QueuedPlayers[player->GetGUID()];
     kinfo.JoinTime = getMSTime();
@@ -79,29 +100,35 @@ void Koth::QueueAddPlayer(Player* player)
     KothQueuedPlayersMap::iterator kitr = m_QueuedPlayers.find(player->GetGUID());
 
     m_RQueuedPlayers[kitr] = player->GetGUID();
+	
+	std::string text = player->GetName() + " has joined the queue";
+	SendMessageToQueue(text);
+	text = "Queue position: " + std::to_string(m_QueuedPlayers.size());
+	SendMessageToPlayer(player, text);
 
     return;
 }
 
-void Koth::QueueRemovePlayer(uint64 guid)
+void Koth::QueueRemovePlayer(Player* player)
 {
+	if (!player)
+		return;
     KothQueuedPlayersMap::iterator itr;
     KothRQueuedPlayersMap::iterator ritr;
 
-    itr = m_QueuedPlayers.find(guid);
+    itr = m_QueuedPlayers.find(player->GetGUID());
     if (itr == m_QueuedPlayers.end())
     {
-        std::string playerName = "Unknown";
-        if (Player* player = ObjectAccessor::FindPlayer(guid))
-            playerName = player->GetName();
-        TC_LOG_ERROR("bg.battleground", "KOTH Queue: couldn't find player %s (GUID: %u)", playerName.c_str(), GUID_LOPART(guid));
+		std::string playerName = player->GetName();            
+        TC_LOG_ERROR("bg.battleground", "KOTH Queue: couldn't find player %s (GUID: %u)", playerName.c_str(), GUID_LOPART(player->GetGUID()));
         return;
     }
 
     ritr = m_RQueuedPlayers.find(itr);
     m_RQueuedPlayers.erase(ritr);
     m_QueuedPlayers.erase(itr);
-
+	std::string text = "You have left the queue";
+	SendMessageToPlayer(player, text);
 }
 
 bool Koth::QueueInvitePlayer(uint64 guid, uint8 slot)
@@ -112,7 +139,7 @@ bool Koth::QueueInvitePlayer(uint64 guid, uint8 slot)
     Player* player = sObjectAccessor->FindPlayer(itr->first);
     if (!kinfo.IsInvited())
     {
-        kinfo.InvitedSlot = slot + 1;
+        kinfo.InvitedSlot = slot + 1; //slot offset by 1 for check
         kinfo.RemoveInviteTime = getMSTime() + KOTH_INVITE_ACCEPT_TIME;
 
         player->SetInvitedForKoth(true);
@@ -120,9 +147,9 @@ bool Koth::QueueInvitePlayer(uint64 guid, uint8 slot)
         KothQueueRemoveEvent* removeEvent = new KothQueueRemoveEvent(player->GetGUID(), kinfo.RemoveInviteTime);
         m_events.AddEvent(removeEvent, m_events.CalculateTime(KOTH_INVITE_ACCEPT_TIME));
 
-        std::string str = "invited to slot " + std::to_string(slot);
-        //TODO notify player of invite
-        player->Say(str, LANG_UNIVERSAL);
+		std::string text = "You have been invited to King of the Hill. You have 60 seconds to respond to the invitation.";
+		//TODO notify player of invite
+		SendMessageToPlayer(player, text);
         SetFighterGUID(player->GetGUID(), slot);
         IncreaseWaitingCount();
         return true;
@@ -156,7 +183,7 @@ void Koth::PlayerInviteResponse(Player* player, bool accept)
 
     player->SetInvitedForKoth(false);
     kinfo.InvitedSlot = 0;
-    QueueRemovePlayer(player->GetGUID());
+    QueueRemovePlayer(player);
     return;
 }
 
@@ -164,9 +191,10 @@ void Koth::PlayerInviteResponse(Player* player, bool accept)
 void Koth::KothQueueUpdate(uint32 diff)
 {
     m_events.Update(diff);
+	KothRQueuedPlayersMap::iterator itr;
     switch (KothState)
     {
-    case KOTH_STATE_WAITING:
+    case KOTH_STATE_WAITING: //Queue state
         //First check if we can proceed state
         if (m_fighterCount == m_maxFighters)
         {
@@ -183,9 +211,6 @@ void Koth::KothQueueUpdate(uint32 diff)
         //Check if queue is populated, then process queue
         if (m_QueuedPlayers.empty() || m_Exec == false)
             break;
-
-        //Get person in queue the longest
-        KothRQueuedPlayersMap::iterator itr;
 
         //Check if there are slots to fill
         if (m_WaitingCount < m_maxFighters)
@@ -207,6 +232,12 @@ void Koth::KothQueueUpdate(uint32 diff)
             }
         }
         break;
+
+	case KOTH_STATE_PREMATCH:
+		break;
+
+
+
     }
 }
 
@@ -254,7 +285,8 @@ void Koth::Debug(Player* player, uint8 mode)
     case 0:
         if (m_QueuedPlayers.empty())
         {
-            player->Say("Queue empty", LANG_UNIVERSAL);
+			info = "Queue Empty";
+			SendMessageToPlayer(player, info);
             return;
         }
         for (itr = m_QueuedPlayers.begin(); itr != m_QueuedPlayers.end(); itr++)
@@ -265,7 +297,7 @@ void Koth::Debug(Player* player, uint8 mode)
             std::stringstream fmt;
             fmt << "Name: " << name << " Jointime: " << JoinTime << " Invited: " << IsInvited;
             info = fmt.str();
-            player->Say(info, LANG_UNIVERSAL);
+			SendMessageToPlayer(player, info);
         }
         break;
 
@@ -293,7 +325,8 @@ bool KothQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     sKothMgr->PlayerInviteResponse(player, false);
 
     //TODO notify player of invitation expiration
-    player->Say("Invite expired", LANG_UNIVERSAL);
+	std::string text = "Your invitation has expired";
+	sKothMgr->SendMessageToPlayer(player, text);
     return true;
 
 }

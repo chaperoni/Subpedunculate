@@ -545,7 +545,7 @@ void WorldSession::LogoutPlayer(bool save)
         //! Call script hook before deletion
         sScriptMgr->OnPlayerLogout(_player);
 
-        sKothMgr->QueueRemovePlayer(_player->GetGUID());
+        sKothMgr->QueueRemovePlayer(_player);
 
         //! Remove the player from the world
         // the player may not be in the world when logging out

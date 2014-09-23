@@ -5,6 +5,8 @@
 #include "Common.h"
 #include "DBCEnums.h"
 #include "EventProcessor.h"
+#include "WorldSession.h"
+#include "Chat.h"
 
 enum KothStates
 {
@@ -72,10 +74,13 @@ public:
 
     KothStates GetKothState() { return KothState; }
 
+	void SendMessageToQueue(std::string text);
+	void SendMessageToPlayer(Player* player, std::string text);
+
     //Queue
     void KothQueueUpdate(uint32 diff);
     void QueueAddPlayer(Player* player);
-    void QueueRemovePlayer(uint64 guid);
+    void QueueRemovePlayer(Player* player);
 
     //invites
     bool QueueInvitePlayer(uint64 guid, uint8 slot);

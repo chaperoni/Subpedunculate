@@ -89,7 +89,7 @@ public:
             break;
 
         case 5:
-            sKothMgr->QueueRemovePlayer(player->GetGUID());
+            sKothMgr->QueueRemovePlayer(player);
             break;
 
         case 6:
