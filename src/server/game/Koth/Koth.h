@@ -30,8 +30,23 @@ enum KothFighters
 
 enum KothTimeIntervals
 {
-    KOTH_INVITE_ACCEPT_TIME = 10000,
-    KOTH_ARENA_TIME_LIMIT = 5000
+    KOTH_TIME_INVITE_COUNTDOWN = 10000,
+    KOTH_TIME_COUNTDOWN = 15000,
+    KOTH_TIME_POSTMATCH = 15000
+};
+
+const Position TeleportPositions[] = 
+{
+    {5729.76f, 618.68f, 571.4f, 5.58f},
+    {5825.41f, 595.22f, 571.4f, 2.48f},
+    {5756.02f, 651.2f, 571.4f, 5.60f},
+    {5799.0f, 562.67f, 571.4f, 2.47f},
+    {5788.0f, 619.0f, 610.0f, 0.98f}
+    //{-9612.28f, -2160.41f, 116.7f, 5.82f},
+    //{-9612.28f, -2160.41f, 116.7f, 5.82f},
+    //{-9612.28f, -2160.41f, 116.7f, 5.82f},
+    //{-9612.28f, -2160.41f, 116.7f, 5.82f},
+    //{-9576.73f, -2178.20f, 86.3f, 0.93f}
 };
 
 struct KothQueueInfo
@@ -41,7 +56,6 @@ struct KothQueueInfo
     uint32 RemoveInviteTime;
     uint8 InvitedSlot;
     bool IsInvited() { return InvitedSlot > 0; }
-
 };
 
 class Koth
@@ -74,10 +88,14 @@ public:
 
     KothStates GetKothState() { return KothState; }
 
+
+    //messaging
 	void SendMessageToQueue(std::string text);
 	void SendMessageToPlayer(Player* player, std::string text);
+    void SendMessageToFighters(std::string text);
 
     //Queue
+    bool IsInQueue(uint64 guid);
     void KothQueueUpdate(uint32 diff);
     void QueueAddPlayer(Player* player);
     void QueueRemovePlayer(Player* player);
@@ -89,11 +107,14 @@ public:
     void IncreaseWaitingCount() { m_WaitingCount++; }
     void DecreaseWaitingCount() { m_WaitingCount--; }
 
+    void CancelInvite(Player* player);
+
     //Arena
     void IncreaseFighterCount() { m_fighterCount++ ; }
     void DecreaseFighterCount() { m_fighterCount--; }
     uint8 GetFighterCount() { return m_fighterCount; }
     uint8 GetMaxFighters() { return m_maxFighters; }
+    void TeleportFighter(Player* player, uint8 slot);
 
     uint64 GetFighterGUID(uint8 slot) { return m_fighterGUIDs[slot]; }
     void SetFighterGUID(uint64 fighterGUID, uint8 slot) { m_fighterGUIDs[slot] = fighterGUID; }
@@ -102,11 +123,14 @@ public:
 
     bool PrepareArena();
 
+    void TeleportFightersStartPosition();
+
     //debug
     void Debug(Player* player, uint8 mode);
     bool m_Exec;
 private:
     std::vector<uint64> m_fighterGUIDs;
+    uint64 m_oldwinnerGUID;
     uint8 m_streak;
     uint8 m_fighterCount;
     uint8 m_maxFighters;
@@ -135,14 +159,29 @@ private:
     uint32 m_RemoveTime;
 };
 
-class KothArenaTimeExpire : public BasicEvent
+class KothArenaCountdown : public BasicEvent
 {
 public:
-    KothArenaTimeExpire(uint32 timeLimit)
+    KothArenaCountdown(uint32 timeLimit)
         : m_TimeLimit(timeLimit)
     { }
 
-    virtual ~KothArenaTimeExpire() { }
+    virtual ~KothArenaCountdown() { }
+
+    virtual bool Execute(uint64 e_time, uint32 p_time) override;
+    virtual void Abort(uint64 e_time) override;
+private:
+    uint32 m_TimeLimit;
+};
+
+class KothArenaPostCountdown : public BasicEvent
+{
+public:
+    KothArenaPostCountdown(uint32 timeLimit)
+        : m_TimeLimit(timeLimit)
+    { }
+
+    virtual ~KothArenaPostCountdown() { }
 
     virtual bool Execute(uint64 e_time, uint32 p_time) override;
     virtual void Abort(uint64 e_time) override;

@@ -2348,6 +2348,7 @@ class Player : public Unit, public GridObject<Player>
 
         void SetInvitedForKoth(bool invited) { m_IsInvitedForKoth = invited; }
         void SetKothFighterSlot(uint8 slot) { m_kothFighterSlot = slot + 1; }
+        void SetKothInProgress(bool status) { m_KothInProgress = status; }
 
     protected:
         // Gamemaster whisper whitelist
@@ -2358,6 +2359,7 @@ class Player : public Unit, public GridObject<Player>
 
         bool m_IsInvitedForKoth;
         uint8 m_kothFighterSlot;
+        bool m_KothInProgress;
 
         /*********************************************************/
         /***               BATTLEGROUND SYSTEM                 ***/

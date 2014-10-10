@@ -692,6 +692,7 @@ Player::Player(WorldSession* session): Unit(true)
 
     m_IsInvitedForKoth = false;
     m_kothFighterSlot = 0;
+    m_KothInProgress = false;
 
     m_zoneUpdateId = uint32(-1);
     m_zoneUpdateTimer = 0;
@@ -7441,14 +7442,14 @@ void Player::UpdateArea(uint32 newArea)
     m_areaUpdateId    = newArea;
 
     AreaTableEntry const* area = GetAreaEntryByAreaID(newArea);
-    pvpInfo.IsInFFAPvPArea = area && (area->flags & AREA_FLAG_ARENA);
+    pvpInfo.IsInFFAPvPArea = (area && (area->flags & AREA_FLAG_ARENA)) || m_KothInProgress;
     UpdatePvPState(true);
 
     UpdateAreaDependentAuras(newArea);
 
     // previously this was in UpdateZone (but after UpdateArea) so nothing will break
     pvpInfo.IsInNoPvPArea = false;
-    if (area && area->IsSanctuary())    // in sanctuary
+    if ((area && area->IsSanctuary() || GetKothFighterSlot()) && !m_KothInProgress)    // in sanctuary
     {
         SetByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
         pvpInfo.IsInNoPvPArea = true;
@@ -7532,7 +7533,7 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
     // Treat players having a quest flagging for PvP as always in hostile area
     pvpInfo.IsHostile = pvpInfo.IsInHostileArea || HasPvPForcingQuest();
 
-    if (zone->flags & AREA_FLAG_CAPITAL)                     // Is in a capital city
+    if ((zone->flags & AREA_FLAG_CAPITAL) && !m_KothInProgress)                     // Is in a capital city
     {
         if (!pvpInfo.IsHostile || zone->IsSanctuary())
         {
@@ -21802,6 +21803,12 @@ bool Player::BuyItemFromVendorSlot(uint64 vendorguid, uint32 vendorslot, uint32 
     {
         SendEquipError(EQUIP_ERR_ITEM_DOESNT_GO_TO_SLOT, NULL, NULL);
         return false;
+    }
+
+    if (creature->GetScriptName() == "npc_gearvendor" && (pProto->RandomProperty > 0 || pProto->RandomSuffix > 0))
+    {
+        sScriptMgr->OnGossipSelect(this, creature, item, 0);
+        return true;
     }
 
     return crItem->maxcount != 0;

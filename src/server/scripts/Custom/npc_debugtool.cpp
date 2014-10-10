@@ -20,6 +20,7 @@
 #define T_DEBUG_KOTH_EDIT "test"
 #define T_DEBUG_KOTH_EXEC "toggle exec"
 #define T_CLOSE "Close"
+#define T_DEBUG_KOTH_CANCEL "cancel"
 
 //item
 #define T_ITEM_SUFFIXFACTOR "Suffix Factor"
@@ -72,6 +73,8 @@ public:
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_LEAVE, 0, 5);
             else if (!player->GetKothFighterSlot())
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_QUEUE, 0, 4);
+            else
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_CANCEL, 0, 9);
 
 
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_INFO, 0, 3);
@@ -102,6 +105,10 @@ public:
 
         case 8:
             sKothMgr->m_Exec = !sKothMgr->m_Exec;
+            break;
+
+        case 9:
+            sKothMgr->CancelInvite(player);
             break;
         }
 
