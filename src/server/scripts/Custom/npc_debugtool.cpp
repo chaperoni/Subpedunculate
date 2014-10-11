@@ -74,18 +74,10 @@ public:
             else if (!player->GetKothFighterSlot())
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_QUEUE, 0, 4);
             else
-                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_CANCEL, 0, 9);
-
-
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_INFO, 0, 3);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_EDIT, 1, 3);
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_EXEC, 0, 8);
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_DEBUG_KOTH_CANCEL, 0, 9);            
+            
             player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
-            break;
-
-        case 3:
-            sKothMgr->Debug(player, sender);
-            break;
+            break;        
 
         case 4:
             sKothMgr->QueueAddPlayer(player);
@@ -101,11 +93,7 @@ public:
 
         case 7:
             sKothMgr->PlayerInviteResponse(player, false);
-            break;
-
-        case 8:
-            sKothMgr->m_Exec = !sKothMgr->m_Exec;
-            break;
+            break;        
 
         case 9:
             sKothMgr->CancelInvite(player);

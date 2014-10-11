@@ -982,7 +982,8 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     for (uint8 i = 0; i < PLAYER_SLOTS_COUNT; i++)
         m_items[i] = NULL;
 
-    Relocate(info->positionX, info->positionY, info->positionZ, info->orientation);
+    Relocate(5788.0f, 619.0f, 610.0f, 0.98f);
+    //Relocate(info->positionX, info->positionY, info->positionZ, info->orientation);
 
     ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(createInfo->Class);
     if (!cEntry)
@@ -992,8 +993,11 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
         return false;
     }
 
-    SetMap(sMapMgr->CreateMap(info->mapId, this));
-
+    SetMap(sMapMgr->CreateMap(571/*info->mapId*/, this));
+    AddItem(25, 1);
+    AddItem(35, 1);
+    AddItem(36, 1);
+    AddItem(2361, 1);
     uint8 powertype = cEntry->powerType;
 
     SetObjectScale(1.0f);
@@ -1044,9 +1048,10 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     SetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION, 0);
 
     // set starting level
-    uint32 start_level = getClass() != CLASS_DEATH_KNIGHT
+    uint32 start_level = urand(33, 38);
+    /*uint32 start_level = getClass() != CLASS_DEATH_KNIGHT
         ? sWorld->getIntConfig(CONFIG_START_PLAYER_LEVEL)
-        : sWorld->getIntConfig(CONFIG_START_HEROIC_PLAYER_LEVEL);
+        : sWorld->getIntConfig(CONFIG_START_HEROIC_PLAYER_LEVEL);*/
 
     if (m_session->HasPermission(rbac::RBAC_PERM_USE_START_GM_LEVEL))
     {

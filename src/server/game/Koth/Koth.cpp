@@ -4,7 +4,16 @@
 
 Koth::Koth()
 {
-    Reset(true);
+    m_QueuedPlayers.clear();
+    m_RQueuedPlayers.clear();
+
+    m_fighterGUIDs.resize(KOTH_FIGHTER_MAX);
+    KothCreatures.resize(KOTH_NPC_MAX);
+    Reset();
+    for (uint8 i = 0; i < KOTH_NPC_MAX; i++)
+    {
+        AddCreature(KOTH_CreatureInfo[i], i, TeleportPositions[i + 5].GetPositionX(), TeleportPositions[i + 5].GetPositionY(), TeleportPositions[i + 5].GetPositionZ(), TeleportPositions[i + 5].GetOrientation());
+    }
 }
 
 Koth::~Koth()
@@ -12,6 +21,20 @@ Koth::~Koth()
 
 }
 
+void Koth::Reset()
+{
+    m_fighterGUIDs.clear();
+    m_fighterGUIDs.resize(KOTH_FIGHTER_MAX);
+    m_maxFighters = 2;
+    m_WaitingCount = 0;
+    m_fighterCount = 0;
+    m_oldwinnerGUID = 0;
+    m_streak = 0;
+    SetState(KOTH_STATE_WAITING);
+}
+
+
+//MESSAGE
 void Koth::SendMessageToQueue(std::string text)
 {
 	WorldPacket data;
@@ -25,7 +48,7 @@ void Koth::SendMessageToQueue(std::string text)
 		player->GetSession()->SendPacket(&data);
 	}
 
-    //also need to message the waiting fighters
+    //also message the waiting fighters
     for (uint8 i = 0; i < m_maxFighters; i++)
     {
         uint64 guid = GetFighterGUID(i);
@@ -49,6 +72,12 @@ void Koth::SendMessageToFighters(std::string text)
     }
 }
 
+void Koth::SendCreatureAnnounce(std::string text)
+{
+    Creature* creature = GetKOTHCreature(KOTH_NPC_ANNOUNCE);
+    creature->Yell(text, LANG_UNIVERSAL);
+}
+
 void Koth::SendMessageToPlayer(Player* player, std::string text)
 {
 	if (!player)
@@ -58,58 +87,8 @@ void Koth::SendMessageToPlayer(Player* player, std::string text)
 	player->GetSession()->SendPacket(&data);
 }
 
-void Koth::Reset(bool init)
-{
-    Player* player = nullptr;
-    if (init)
-    {
-        for (KothQueuedPlayersMap::iterator itr = m_QueuedPlayers.begin(); itr != m_QueuedPlayers.end(); itr++)
-        {
-            player = sObjectAccessor->FindPlayer(itr->first);
-            if (!player)
-                continue;
-            player->RemoveKothFighterSlot();
-            player->SetInvitedForKoth(false);
-        }
-        if (m_QueuedPlayers.size() > 0)
-        {
-            for (uint8 i = KOTH_FIGHTER_KING; i < KOTH_FIGHTER_MAX; i++)
-            {
-                player = sObjectAccessor->FindPlayer(GetFighterGUID(i));
-                if (!player)
-                    continue;
-                player->RemoveKothFighterSlot();
-                player->SetInvitedForKoth(false);
-            }
-        }
 
-        m_QueuedPlayers.clear();
-        m_RQueuedPlayers.clear();
-        m_fighterGUIDs.clear();
-
-        for (uint8 i = KOTH_FIGHTER_KING; i < KOTH_FIGHTER_MAX; i++)
-        {
-            m_fighterGUIDs.push_back(0);
-        }
-        m_maxFighters = 2;
-        m_Exec = false;
-        m_WaitingCount = 0;
-        m_fighterCount = 0;
-        m_oldwinnerGUID = 0;
-    }
-
-    for (uint8 i = KOTH_FIGHTER_CHALLENGER_1; i < m_maxFighters; i++)
-    {
-        if (GetFighterGUID(i) == 0)
-            continue;
-        player = sObjectAccessor->FindPlayer(GetFighterGUID(i));
-        player->RemoveKothFighterSlot();
-        player->SetInvitedForKoth(false);
-    }
-    SetState(KOTH_STATE_WAITING);
-
-}
-
+//QUEUE
 void Koth::QueueAddPlayer(Player* player)
 {
     if (player->GetKothFighterSlot() || player->IsInvitedForKoth())
@@ -179,8 +158,8 @@ bool Koth::QueueInvitePlayer(uint64 guid, uint8 slot)
         KothQueueRemoveEvent* removeEvent = new KothQueueRemoveEvent(player->GetGUID(), kinfo.RemoveInviteTime);
         m_events.AddEvent(removeEvent, m_events.CalculateTime(KOTH_TIME_INVITE_COUNTDOWN));
 
-		std::string text = "KOTH: You have been invited to King of the Hill. You have 60 seconds to respond to the invitation.";
-		//TODO notify player of invite
+		std::string text = "KOTH: You have been invited to King of the Hill. You have 30 seconds to respond to the invitation.";
+
 		SendMessageToPlayer(player, text);
         SetFighterGUID(player->GetGUID(), slot);
         IncreaseWaitingCount();
@@ -211,7 +190,6 @@ void Koth::PlayerInviteResponse(Player* player, bool accept)
     {
         DecreaseWaitingCount();
         SetFighterGUID(0, kinfo.InvitedSlot - 1);
-        SendMessageToPlayer(player, "KOTH: invite cancelled");
     }
 
     player->SetInvitedForKoth(false);
@@ -237,24 +215,6 @@ void Koth::CancelInvite(Player* player)
     return;
 }
 
-void Koth::TeleportFighter(Player* player, uint8 slot)
-{
-    player->TeleportTo(player->GetMapId(), TeleportPositions[slot].GetPositionX(), TeleportPositions[slot].GetPositionY(), TeleportPositions[slot].GetPositionZ(), TeleportPositions[slot].GetOrientation());
-}
-
-void Koth::TeleportFightersStartPosition()
-{
-    Player* player = nullptr;
-    for (uint8 i = 0; i < m_maxFighters; i++)
-    {
-        player = sObjectAccessor->FindPlayer(GetFighterGUID(i));
-        if (!player)
-            break;
-        TeleportFighter(player, i);
-        player->SetKothInProgress(true);
-    }
-}
-
 void Koth::KothQueueUpdate(uint32 diff)
 {
     m_events.Update(diff);
@@ -262,22 +222,24 @@ void Koth::KothQueueUpdate(uint32 diff)
     switch (KothState)
     {
     case KOTH_STATE_WAITING: //Queue state
-        //First check if we can proceed state
+        //First check if we have enough fighters
         if (m_fighterCount == m_maxFighters)
         {
             bool ArenaReady = PrepareArena();
             if (ArenaReady)
             {
                 SetState(KOTH_STATE_PREMATCH);
+                Creature* settings = GetKOTHCreature(KOTH_NPC_SETTINGS);
+                settings->AddAura(10032, settings);
                 KothArenaCountdown* countdownEvent = new KothArenaCountdown(KOTH_TIME_COUNTDOWN);
                 m_events.AddEvent(countdownEvent, m_events.CalculateTime(KOTH_TIME_COUNTDOWN));
-                SendMessageToFighters("KOTH: Arena filled! Match will begin in " + std::to_string(KOTH_TIME_COUNTDOWN / 1000) + " seconds.");
+                SendCreatureAnnounce("We have found our fighters! The match will begin in " + std::to_string(KOTH_TIME_COUNTDOWN / 1000) + " seconds.");
                 break;
             }
         }
 
         //Check if queue is populated, then process queue
-        if (m_QueuedPlayers.empty() || m_Exec == false)
+        if (m_QueuedPlayers.empty())
             break;
 
         //Check if there are slots to fill
@@ -302,6 +264,7 @@ void Koth::KothQueueUpdate(uint32 diff)
         break;
 
 	case KOTH_STATE_PREMATCH:
+        //Timer set
 		break;
 
     case KOTH_STATE_INPROGRESS:
@@ -326,10 +289,11 @@ void Koth::KothQueueUpdate(uint32 diff)
                     winner->SetByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
                     winner->SetKothFighterSlot(KOTH_FIGHTER_KING);
 
-                    SendMessageToPlayer(winner, "KOTH: You won! Current streak: " + std::to_string(m_streak));
+                    SendCreatureAnnounce(winner->GetName() + " is the winner! They are on a streak of " + std::to_string(m_streak));
                     SendMessageToQueue("KOTH: Next match begins in " + std::to_string(KOTH_TIME_POSTMATCH / 1000) + " seconds.");
                     SetState(KOTH_STATE_POSTMATCH);
-
+                    Creature* settings = GetKOTHCreature(KOTH_NPC_SETTINGS);
+                    settings->RemoveAura(10032);
                     KothArenaPostCountdown* postCountdownEvent = new KothArenaPostCountdown(KOTH_TIME_POSTMATCH);
                     m_events.AddEvent(postCountdownEvent, m_events.CalculateTime(KOTH_TIME_POSTMATCH));
                     break;
@@ -339,10 +303,47 @@ void Koth::KothQueueUpdate(uint32 diff)
         break;
 
     case KOTH_STATE_POSTMATCH:
+        //Timer set
         break;
+    }
+}
 
+void Koth::Retire(Player* player)
+{
+    //todo: dispense reward here
+    player->RemoveKothFighterSlot();
+    player->RemoveByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
+    TeleportFighter(player, 4);
+    Reset();
+}
 
+void Koth::SetMaxFighters(Player* player, uint8 count)
+{
+    if (count < m_fighterCount)
+    {
+        SendMessageToPlayer(player, "KOTH: We have already found " + std::to_string(m_fighterCount) + " fighters, please choose a higher amount or wait until the end of this round.");
+        return;
+    }
+    m_maxFighters = count;
+    SendMessageToQueue("KOTH: The maximum number of fighters has been changed to " + std::to_string(count));
+}
 
+//ARENA
+void Koth::TeleportFighter(Player* player, uint8 slot)
+{
+    player->TeleportTo(571, TeleportPositions[slot].GetPositionX(), TeleportPositions[slot].GetPositionY(), TeleportPositions[slot].GetPositionZ(), TeleportPositions[slot].GetOrientation());
+}
+
+void Koth::TeleportFightersStartPosition()
+{
+    Player* player = nullptr;
+    for (uint8 i = 0; i < m_maxFighters; i++)
+    {
+        player = sObjectAccessor->FindPlayer(GetFighterGUID(i));
+        if (!player)
+            break;
+        TeleportFighter(player, i);
+        player->SetKothInProgress(true);
     }
 }
 
@@ -350,7 +351,6 @@ void Koth::ArenaAddPlayer(Player* player, uint8 slot)
 {
     m_fighterCount++;
     player->SetKothFighterSlot(slot);
-    //stuff
     TeleportFighter(player, slot);
     player->SetByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
 }
@@ -376,42 +376,60 @@ bool Koth::PrepareArena()
     return false;
 }
 
-void Koth::Debug(Player* player, uint8 mode)
+//CREATURE
+Creature* Koth::AddCreature(uint32 entry, uint32 type, float x, float y, float z, float o, TeamId /*teamId = TEAM_NEUTRAL*/, uint32 respawntime /*= 0*/)
 {
+    // If the assert is called, means that BgCreatures must be resized!
+    ASSERT(type < KothCreatures.size());
 
-    KothQueuedPlayersMap::iterator itr;
-    KothRQueuedPlayersMap::iterator ritr;
-    std::string name;
-    uint32 JoinTime;
-    bool IsInvited;
-    std::string info;
-    switch (mode)
+    Map* map = sMapMgr->FindMap(571, 0);
+    if (!map)
+        return NULL;
+
+    Creature* creature = new Creature();
+    if (!creature->Create(sObjectMgr->GenerateLowGuid(HIGHGUID_UNIT), map, PHASEMASK_NORMAL, entry, x, y, z, o))
     {
-    case 0:
-        if (m_QueuedPlayers.empty())
-        {
-			info = "Queue Empty";
-			SendMessageToPlayer(player, info);
-            return;
-        }
-        for (itr = m_QueuedPlayers.begin(); itr != m_QueuedPlayers.end(); itr++)
-        {
-            name = sObjectAccessor->FindPlayer(itr->first)->GetName();
-            JoinTime = itr->second.JoinTime;
-            IsInvited = itr->second.IsInvited();
-            std::stringstream fmt;
-            fmt << "Name: " << name << " Jointime: " << JoinTime << " Invited: " << IsInvited;
-            info = fmt.str();
-			SendMessageToPlayer(player, info);
-        }
-        break;
-
-    case 1:
-        Reset(true);
-        m_maxFighters = urand(2, 4);
-        player->Say(std::to_string(m_maxFighters), LANG_UNIVERSAL);
-        break;
+        TC_LOG_ERROR("bg.battleground", "Koth::AddCreature: cannot create creature (entry: %u)!",
+            entry);
+        delete creature;
+        return NULL;
     }
+
+    creature->SetHomePosition(x, y, z, o);
+
+    CreatureTemplate const* cinfo = sObjectMgr->GetCreatureTemplate(entry);
+    if (!cinfo)
+    {
+        TC_LOG_ERROR("bg.battleground", "Koth::AddCreature: creature template (entry: %u) does not exist!",
+            entry);
+        delete creature;
+        return NULL;
+    }
+
+    if (!map->AddToMap(creature))
+    {
+        delete creature;
+        return NULL;
+    }
+
+    KothCreatures[type] = creature->GetGUID();
+
+    if (respawntime)
+        creature->SetRespawnDelay(respawntime);
+
+    return creature;
+}
+
+Creature* Koth::GetKOTHCreature(uint32 type)
+{
+    Map* map = sMapMgr->FindMap(571, 0);
+    Creature* creature = map->GetCreature(KothCreatures[type]);
+    if (!creature)
+    {
+        TC_LOG_ERROR("bg.battleground", "Koth::GetBGCreature: creature (type: %u, GUID: %u) not found!",
+        type, GUID_LOPART(KothCreatures[type]));
+    }
+    return creature;
 }
 
 bool KothQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
@@ -446,7 +464,6 @@ bool KothArenaCountdown::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
     sKothMgr->TeleportFightersStartPosition();
     sKothMgr->SetState(KOTH_STATE_INPROGRESS);
     sKothMgr->SendMessageToFighters("KOTH: The battle has begun!");
-
     return true;
 }
 

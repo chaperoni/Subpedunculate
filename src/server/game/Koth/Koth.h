@@ -30,23 +30,33 @@ enum KothFighters
 
 enum KothTimeIntervals
 {
-    KOTH_TIME_INVITE_COUNTDOWN = 10000,
+    KOTH_TIME_INVITE_COUNTDOWN = 30000,
     KOTH_TIME_COUNTDOWN = 15000,
     KOTH_TIME_POSTMATCH = 15000
 };
 
-const Position TeleportPositions[] = 
+const Position TeleportPositions[] =
 {
-    {5729.76f, 618.68f, 571.4f, 5.58f},
-    {5825.41f, 595.22f, 571.4f, 2.48f},
-    {5756.02f, 651.2f, 571.4f, 5.60f},
-    {5799.0f, 562.67f, 571.4f, 2.47f},
-    {5788.0f, 619.0f, 610.0f, 0.98f}
-    //{-9612.28f, -2160.41f, 116.7f, 5.82f},
-    //{-9612.28f, -2160.41f, 116.7f, 5.82f},
-    //{-9612.28f, -2160.41f, 116.7f, 5.82f},
-    //{-9612.28f, -2160.41f, 116.7f, 5.82f},
-    //{-9576.73f, -2178.20f, 86.3f, 0.93f}
+    {5729.76f, 618.68f, 571.4f, 5.58f}, //KING
+    {5825.41f, 595.22f, 571.4f, 2.48f}, //1
+    {5756.02f, 651.2f, 571.4f, 5.60f}, //2
+    {5799.0f, 562.67f, 571.4f, 2.47f}, //3
+    {5788.0f, 619.0f, 610.0f, 0.98f}, //EXIT
+    {5777.75f, 606.92f, 565.3f, 0.11f}, //NPC Settings
+    {5796.76f, 609.05f, 570.91f, 3.11f} //NPC Announce
+};
+
+enum KothCreatureType
+{
+    KOTH_NPC_SETTINGS,
+    KOTH_NPC_ANNOUNCE,
+    KOTH_NPC_MAX
+};
+
+const uint32 KOTH_CreatureInfo[KOTH_NPC_MAX] =
+{
+    1000002,
+    482
 };
 
 struct KothQueueInfo
@@ -84,7 +94,7 @@ public:
     KothQueuedPlayersMap m_QueuedPlayers;
     KothRQueuedPlayersMap m_RQueuedPlayers;
 
-    void Reset(bool init);
+    void Reset();
 
     KothStates GetKothState() { return KothState; }
 
@@ -93,12 +103,18 @@ public:
 	void SendMessageToQueue(std::string text);
 	void SendMessageToPlayer(Player* player, std::string text);
     void SendMessageToFighters(std::string text);
+    void SendCreatureAnnounce(std::string text);
 
     //Queue
     bool IsInQueue(uint64 guid);
     void KothQueueUpdate(uint32 diff);
     void QueueAddPlayer(Player* player);
     void QueueRemovePlayer(Player* player);
+
+    void Retire(Player* player);
+
+    //Settings
+    void SetMaxFighters(Player* player, uint8 count);
 
     //invites
     bool QueueInvitePlayer(uint64 guid, uint8 slot);
@@ -125,9 +141,13 @@ public:
 
     void TeleportFightersStartPosition();
 
-    //debug
-    void Debug(Player* player, uint8 mode);
-    bool m_Exec;
+    //Creatures
+    typedef std::vector<uint64> KOTHCreatures;
+    KOTHCreatures KothCreatures;
+
+    Creature* GetKOTHCreature(uint32 type);
+    Creature* AddCreature(uint32 entry, uint32 type, float x, float y, float z, float o, TeamId teamId = TEAM_NEUTRAL, uint32 respawntime = 0);
+
 private:
     std::vector<uint64> m_fighterGUIDs;
     uint64 m_oldwinnerGUID;

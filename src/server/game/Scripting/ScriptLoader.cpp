@@ -24,6 +24,7 @@ void AddSC_npc_bgvote();
 void AddSC_npc_debugtool();
 void AddSC_npc_gearvendor();
 void AddSC_KothScripts_player();
+void AddSC_npc_koth();
 
 //examples
 void AddSC_example_creature();
@@ -1453,6 +1454,7 @@ void AddCustomScripts()
     AddSC_npc_gearvendor();
     AddSC_npc_debugtool();
     AddSC_KothScripts_player();
+    AddSC_npc_koth();
 
 #endif
 }
