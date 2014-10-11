@@ -211,7 +211,8 @@ void Koth::CancelInvite(Player* player)
     SetFighterGUID(0, player->GetKothFighterSlot() - 1);
     SendMessageToPlayer(player, "KOTH: invite cancelled");
     player->SetInvitedForKoth(false);
-    player->RemoveKothFighterSlot();
+    player->RemoveKothFighterSlot();    
+    TeleportFighter(player, 4);
     return;
 }
 
@@ -310,11 +311,30 @@ void Koth::KothQueueUpdate(uint32 diff)
 
 void Koth::Retire(Player* player)
 {
-    //todo: dispense reward here
+    //todo: dispense reward here    
+    Player* next = nullptr;
     player->RemoveKothFighterSlot();
     player->RemoveByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
     TeleportFighter(player, 4);
-    Reset();
+    SetFighterGUID(0, KOTH_FIGHTER_KING);
+    for (uint8 i = 1; i < m_maxFighters; i++)
+    {
+        next = sObjectAccessor->FindPlayer(GetFighterGUID(i));
+        if (next)
+        {
+            next->SetKothFighterSlot(KOTH_FIGHTER_KING);
+            m_streak = 0;
+            SetFighterGUID(0, i);
+            DecreaseFighterCount();
+            DecreaseWaitingCount();
+            SetFighterGUID(next->GetGUID(), KOTH_FIGHTER_KING);
+            SendMessageToPlayer(next, "KOTH: The King has retired, you have been promoted as the King");
+            break;
+        }
+        if (i == m_maxFighters - 1) //didn't find a successor
+            Reset();
+    }
+      
 }
 
 void Koth::SetMaxFighters(Player* player, uint8 count)
@@ -435,12 +455,9 @@ Creature* Koth::GetKOTHCreature(uint32 type)
 bool KothQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
 {
     Player* player = sObjectAccessor->FindPlayer(m_PlayerGuid);
-    if (!player) //player logged off
-    {
-        sKothMgr->DecreaseWaitingCount();
+    if (!player) //player logged off           
         return true;
-    }
-
+    
 
     if (!player->IsInvitedForKoth()) //player responded to invite queue manually
         return true;

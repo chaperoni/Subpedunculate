@@ -29,8 +29,7 @@ public:
         if (player->GetKothFighterSlot() == 1)
         {
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_MAX, 0, 7);
-            if (sKothMgr->GetFighterCount() == 1)
-                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, T_KOTH_RETIRE, 0, 6);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, T_KOTH_RETIRE, 0, 6);
         }
         else if (player->IsInvitedForKoth())
         {

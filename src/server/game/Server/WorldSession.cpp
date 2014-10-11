@@ -546,7 +546,17 @@ void WorldSession::LogoutPlayer(bool save)
         sScriptMgr->OnPlayerLogout(_player);
 
         if (sKothMgr->IsInQueue(_player->GetGUID()))
+        {
+            if (_player->IsInvitedForKoth())
+                sKothMgr->DecreaseWaitingCount();
             sKothMgr->QueueRemovePlayer(_player);
+        }
+
+        if (_player->GetKothFighterSlot() == 1)
+            sKothMgr->Retire(_player);
+
+        else if (_player->GetKothFighterSlot() > 1)
+            sKothMgr->CancelInvite(_player);
         
 
         //! Remove the player from the world
