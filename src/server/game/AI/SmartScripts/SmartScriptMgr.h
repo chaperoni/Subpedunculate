@@ -479,7 +479,7 @@ enum SMART_ACTION
     SMART_ACTION_SET_FLY                            = 60,     // 0/1
     SMART_ACTION_SET_SWIM                           = 61,     // 0/1
     SMART_ACTION_TELEPORT                           = 62,     // mapID,
-    SMART_ACTION_STORE_VARIABLE_DECIMAL             = 63,     // varID, number
+    // 63 unused
     SMART_ACTION_STORE_TARGET_LIST                  = 64,     // varID,
     SMART_ACTION_WP_RESUME                          = 65,     // none
     SMART_ACTION_SET_ORIENTATION                    = 66,     //
@@ -1347,12 +1347,14 @@ struct SmartScriptHolder
     bool active;
     bool runOnce;
     bool enableTimed;
+
+    operator bool() const { return entryOrGuid != 0; }
 };
 
 typedef std::unordered_map<uint32, WayPoint*> WPPath;
 
 typedef std::list<WorldObject*> ObjectList;
-typedef std::list<uint64> GuidList;
+
 class ObjectGuidList
 {
     ObjectList* m_objectList;
@@ -1385,7 +1387,7 @@ public:
                 if (WorldObject* obj = ObjectAccessor::GetWorldObject(*m_baseObject, *itr))
                     m_objectList->push_back(obj);
                 else
-                    TC_LOG_DEBUG("scripts.ai", "SmartScript::mTargetStorage stores a guid to an invalid object: " UI64FMTD, *itr);
+                    TC_LOG_DEBUG("scripts.ai", "SmartScript::mTargetStorage stores a guid to an invalid object: %s", itr->ToString().c_str());
             }
         }
 
@@ -1469,22 +1471,36 @@ class SmartAIMgr
             }
         }
 
+        static SmartScriptHolder& FindLinkedSourceEvent(SmartAIEventList& list, uint32 eventId)
+        {
+            SmartAIEventList::iterator itr = std::find_if(list.begin(), list.end(),
+                [eventId](SmartScriptHolder& source) { return source.link == eventId; });
+
+            if (itr != list.end())
+                return *itr;
+
+            static SmartScriptHolder SmartScriptHolderDummy;
+            return SmartScriptHolderDummy;
+        }
+
+        static SmartScriptHolder& FindLinkedEvent(SmartAIEventList& list, uint32 link)
+        {
+            SmartAIEventList::iterator itr = std::find_if(list.begin(), list.end(),
+                [link](SmartScriptHolder& linked) { return linked.event_id == link && linked.GetEventType() == SMART_EVENT_LINK; });
+
+            if (itr != list.end())
+                return *itr;
+
+            static SmartScriptHolder SmartScriptHolderDummy;
+            return SmartScriptHolderDummy;
+        }
+
     private:
         //event stores
         SmartAIEventMap mEventMap[SMART_SCRIPT_TYPE_MAX];
 
         bool IsEventValid(SmartScriptHolder& e);
         bool IsTargetValid(SmartScriptHolder const& e);
-
-        /*inline bool IsTargetValid(SmartScriptHolder e, int32 target)
-        {
-            if (target < SMART_TARGET_NONE || target >= SMART_TARGET_END)
-            {
-                TC_LOG_ERROR("sql.sql", "SmartAIMgr: Entry %d SourceType %u Event %u Action %u uses invalid Target type %d, skipped.", e.entryOrGuid, e.GetScriptType(), e.event_id, e.GetActionType(), target);
-                return false;
-            }
-            return true;
-        }*/
 
         bool IsMinMaxValid(SmartScriptHolder const& e, uint32 min, uint32 max)
         {
@@ -1606,7 +1622,7 @@ class SmartAIMgr
             return true;
         }
 
-        //bool IsTextValid(SmartScriptHolder const& e, uint32 id);
+        bool IsTextValid(SmartScriptHolder const& e, uint32 id);
 
         // Helpers
         void LoadHelperStores();
@@ -1615,10 +1631,12 @@ class SmartAIMgr
         CacheSpellContainerBounds GetSummonCreatureSpellContainerBounds(uint32 creatureEntry) const;
         CacheSpellContainerBounds GetSummonGameObjectSpellContainerBounds(uint32 gameObjectEntry) const;
         CacheSpellContainerBounds GetKillCreditSpellContainerBounds(uint32 killCredit) const;
+        CacheSpellContainerBounds GetCreateItemSpellContainerBounds(uint32 itemId) const;
 
         CacheSpellContainer SummonCreatureSpellStore;
         CacheSpellContainer SummonGameObjectSpellStore;
         CacheSpellContainer KillCreditSpellStore;
+        CacheSpellContainer CreateItemSpellStore;
 };
 
 #define sSmartScriptMgr SmartAIMgr::instance()

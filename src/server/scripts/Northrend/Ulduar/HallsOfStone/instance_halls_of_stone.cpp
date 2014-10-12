@@ -39,22 +39,6 @@ class instance_halls_of_stone : public InstanceMapScript
                 SetHeaders(DataHeader);
                 SetBossNumber(EncounterCount);
                 LoadDoorData(doorData);
-
-                KrystallusGUID          = 0;
-                MaidenOfGriefGUID       = 0;
-                SjonnirGUID             = 0;
-
-                KaddrakGUID             = 0;
-                AbedneumGUID            = 0;
-                MarnakGUID              = 0;
-                BrannGUID               = 0;
-
-                TribunalConsoleGUID     = 0;
-                TribunalChestGUID       = 0;
-                TribunalSkyFloorGUID    = 0;
-                KaddrakGoGUID           = 0;
-                AbedneumGoGUID          = 0;
-                MarnakGoGUID            = 0;
             }
 
             void OnCreatureCreate(Creature* creature) override
@@ -107,7 +91,7 @@ class instance_halls_of_stone : public InstanceMapScript
                     case GO_TRIBUNAL_CHEST_HERO:
                         TribunalChestGUID = go->GetGUID();
                         if (GetBossState(DATA_BRANN_EVENT) == DONE)
-                            go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
+                            go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
                         break;
                     case GO_TRIBUNAL_SKY_FLOOR:
                         TribunalSkyFloorGUID = go->GetGUID();
@@ -132,7 +116,7 @@ class instance_halls_of_stone : public InstanceMapScript
                 }
             }
 
-            uint64 GetData64(uint32 type) const override
+            ObjectGuid GetGuidData(uint32 type) const override
             {
                 switch (type)
                 {
@@ -162,7 +146,7 @@ class instance_halls_of_stone : public InstanceMapScript
                         break;
                 }
 
-                return 0;
+                return ObjectGuid::Empty;
             }
 
             bool SetBossState(uint32 type, EncounterState state) override
@@ -176,7 +160,7 @@ class instance_halls_of_stone : public InstanceMapScript
                         if (state == DONE)
                         {
                             if (GameObject* go = instance->GetGameObject(TribunalChestGUID))
-                                go->RemoveFlag(GAMEOBJECT_FLAGS,GO_FLAG_INTERACT_COND);
+                                go->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
                         }
                         break;
                     default:
@@ -186,7 +170,7 @@ class instance_halls_of_stone : public InstanceMapScript
                 return true;
             }
 
-            bool CheckRequiredBosses(uint32 bossId, Player const* player /*= NULL*/) const override
+            bool CheckRequiredBosses(uint32 bossId, Player const* player = nullptr) const override
             {
                 if (player && player->GetSession()->HasPermission(rbac::RBAC_PERM_SKIP_CHECK_INSTANCE_REQUIRED_BOSSES))
                     return true;
@@ -205,21 +189,21 @@ class instance_halls_of_stone : public InstanceMapScript
             }
 
         protected:
-            uint64 KrystallusGUID;
-            uint64 MaidenOfGriefGUID;
-            uint64 SjonnirGUID;
+            ObjectGuid KrystallusGUID;
+            ObjectGuid MaidenOfGriefGUID;
+            ObjectGuid SjonnirGUID;
 
-            uint64 KaddrakGUID;
-            uint64 AbedneumGUID;
-            uint64 MarnakGUID;
-            uint64 BrannGUID;
+            ObjectGuid KaddrakGUID;
+            ObjectGuid AbedneumGUID;
+            ObjectGuid MarnakGUID;
+            ObjectGuid BrannGUID;
 
-            uint64 TribunalConsoleGUID;
-            uint64 TribunalChestGUID;
-            uint64 TribunalSkyFloorGUID;
-            uint64 KaddrakGoGUID;
-            uint64 AbedneumGoGUID;
-            uint64 MarnakGoGUID;
+            ObjectGuid TribunalConsoleGUID;
+            ObjectGuid TribunalChestGUID;
+            ObjectGuid TribunalSkyFloorGUID;
+            ObjectGuid KaddrakGoGUID;
+            ObjectGuid AbedneumGoGUID;
+            ObjectGuid MarnakGoGUID;
         };
 
         InstanceScript* GetInstanceScript(InstanceMap* map) const override

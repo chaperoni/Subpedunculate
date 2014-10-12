@@ -54,10 +54,10 @@ BattlegroundWS::BattlegroundWS()
     _flagSpellForceTimer = 0;
     _bothFlagsKept = false;
     _flagDebuffState = 0;
-    m_FlagKeepers[TEAM_ALLIANCE] = 0;
-    m_FlagKeepers[TEAM_HORDE] = 0;
-    m_DroppedFlagGUID[TEAM_ALLIANCE] = 0;
-    m_DroppedFlagGUID[TEAM_HORDE] = 0;
+    m_FlagKeepers[TEAM_ALLIANCE].Clear();
+    m_FlagKeepers[TEAM_HORDE].Clear();
+    m_DroppedFlagGUID[TEAM_ALLIANCE].Clear();
+    m_DroppedFlagGUID[TEAM_HORDE].Clear();
     _flagState[TEAM_ALLIANCE] = BG_WS_FLAG_STATE_ON_BASE;
     _flagState[TEAM_HORDE] = BG_WS_FLAG_STATE_ON_BASE;
     _flagsTimer[TEAM_ALLIANCE] = 0;
@@ -334,9 +334,9 @@ void BattlegroundWS::RespawnFlagAfterDrop(uint32 team)
     if (GameObject* obj = GetBgMap()->GetGameObject(GetDroppedFlagGUID(team)))
         obj->Delete();
     else
-        TC_LOG_ERROR("bg.battleground", "unknown droped flag bg, guid: %u", GUID_LOPART(GetDroppedFlagGUID(team)));
+        TC_LOG_ERROR("bg.battleground", "unknown dropped flag (%s)", GetDroppedFlagGUID(team).ToString().c_str());
 
-    SetDroppedFlagGUID(0, GetTeamIndexByTeamId(team));
+    SetDroppedFlagGUID(ObjectGuid::Empty, GetTeamIndexByTeamId(team));
     _bothFlagsKept = false;
 }
 
@@ -352,7 +352,7 @@ void BattlegroundWS::EventPlayerCapturedFlag(Player* player)
     {
         if (!IsHordeFlagPickedup())
             return;
-        SetHordeFlagPicker(0);                              // must be before aura remove to prevent 2 events (drop+capture) at the same time
+        SetHordeFlagPicker(ObjectGuid::Empty);              // must be before aura remove to prevent 2 events (drop+capture) at the same time
                                                             // horde flag in base (but not respawned yet)
         _flagState[TEAM_HORDE] = BG_WS_FLAG_STATE_WAIT_RESPAWN;
                                                             // Drop Horde Flag from Player
@@ -371,7 +371,7 @@ void BattlegroundWS::EventPlayerCapturedFlag(Player* player)
     {
         if (!IsAllianceFlagPickedup())
             return;
-        SetAllianceFlagPicker(0);                           // must be before aura remove to prevent 2 events (drop+capture) at the same time
+        SetAllianceFlagPicker(ObjectGuid::Empty);           // must be before aura remove to prevent 2 events (drop+capture) at the same time
                                                             // alliance flag in base (but not respawned yet)
         _flagState[TEAM_ALLIANCE] = BG_WS_FLAG_STATE_WAIT_RESPAWN;
                                                             // Drop Alliance Flag from Player
@@ -441,7 +441,7 @@ void BattlegroundWS::EventPlayerDroppedFlag(Player* player)
 
             if (GetFlagPickerGUID(TEAM_HORDE) == player->GetGUID())
             {
-                SetHordeFlagPicker(0);
+                SetHordeFlagPicker(ObjectGuid::Empty);
                 player->RemoveAurasDueToSpell(BG_WS_SPELL_WARSONG_FLAG);
             }
         }
@@ -452,7 +452,7 @@ void BattlegroundWS::EventPlayerDroppedFlag(Player* player)
 
             if (GetFlagPickerGUID(TEAM_ALLIANCE) == player->GetGUID())
             {
-                SetAllianceFlagPicker(0);
+                SetAllianceFlagPicker(ObjectGuid::Empty);
                 player->RemoveAurasDueToSpell(BG_WS_SPELL_SILVERWING_FLAG);
             }
         }
@@ -467,7 +467,7 @@ void BattlegroundWS::EventPlayerDroppedFlag(Player* player)
             return;
         if (GetFlagPickerGUID(TEAM_HORDE) == player->GetGUID())
         {
-            SetHordeFlagPicker(0);
+            SetHordeFlagPicker(ObjectGuid::Empty);
             player->RemoveAurasDueToSpell(BG_WS_SPELL_WARSONG_FLAG);
             if (_flagDebuffState == 1)
               player->RemoveAurasDueToSpell(WS_SPELL_FOCUSED_ASSAULT);
@@ -484,7 +484,7 @@ void BattlegroundWS::EventPlayerDroppedFlag(Player* player)
             return;
         if (GetFlagPickerGUID(TEAM_ALLIANCE) == player->GetGUID())
         {
-            SetAllianceFlagPicker(0);
+            SetAllianceFlagPicker(ObjectGuid::Empty);
             player->RemoveAurasDueToSpell(BG_WS_SPELL_SILVERWING_FLAG);
             if (_flagDebuffState == 1)
               player->RemoveAurasDueToSpell(WS_SPELL_FOCUSED_ASSAULT);
@@ -639,7 +639,7 @@ void BattlegroundWS::EventPlayerClickedOnFlag(Player* player, GameObject* target
     player->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_ENTER_PVP_COMBAT);
 }
 
-void BattlegroundWS::RemovePlayer(Player* player, uint64 guid, uint32 /*team*/)
+void BattlegroundWS::RemovePlayer(Player* player, ObjectGuid guid, uint32 /*team*/)
 {
     // sometimes flag aura not removed :(
     if (IsAllianceFlagPickedup() && m_FlagKeepers[TEAM_ALLIANCE] == guid)
@@ -647,7 +647,7 @@ void BattlegroundWS::RemovePlayer(Player* player, uint64 guid, uint32 /*team*/)
         if (!player)
         {
             TC_LOG_ERROR("bg.battleground", "BattlegroundWS: Removing offline player who has the FLAG!!");
-            SetAllianceFlagPicker(0);
+            SetAllianceFlagPicker(ObjectGuid::Empty);
             RespawnFlag(ALLIANCE, false);
         }
         else
@@ -658,7 +658,7 @@ void BattlegroundWS::RemovePlayer(Player* player, uint64 guid, uint32 /*team*/)
         if (!player)
         {
             TC_LOG_ERROR("bg.battleground", "BattlegroundWS: Removing offline player who has the FLAG!!");
-            SetHordeFlagPicker(0);
+            SetHordeFlagPicker(ObjectGuid::Empty);
             RespawnFlag(HORDE, false);
         }
         else
@@ -801,10 +801,10 @@ void BattlegroundWS::Reset()
     //call parent's class reset
     Battleground::Reset();
 
-    m_FlagKeepers[TEAM_ALLIANCE]     = 0;
-    m_FlagKeepers[TEAM_HORDE]        = 0;
-    m_DroppedFlagGUID[TEAM_ALLIANCE] = 0;
-    m_DroppedFlagGUID[TEAM_HORDE]    = 0;
+    m_FlagKeepers[TEAM_ALLIANCE].Clear();
+    m_FlagKeepers[TEAM_HORDE].Clear();
+    m_DroppedFlagGUID[TEAM_ALLIANCE].Clear();
+    m_DroppedFlagGUID[TEAM_HORDE].Clear();
     _flagState[TEAM_ALLIANCE]        = BG_WS_FLAG_STATE_ON_BASE;
     _flagState[TEAM_HORDE]           = BG_WS_FLAG_STATE_ON_BASE;
     m_TeamScores[TEAM_ALLIANCE]      = 0;

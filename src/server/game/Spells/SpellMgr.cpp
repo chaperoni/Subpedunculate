@@ -973,10 +973,10 @@ bool SpellMgr::CanSpellTriggerProcOnEvent(SpellProcEntry const& procEntry, ProcE
     // check spell family name/flags (if set) for spells
     if (eventInfo.GetTypeMask() & (PERIODIC_PROC_FLAG_MASK | SPELL_PROC_FLAG_MASK | PROC_FLAG_DONE_TRAP_ACTIVATION))
     {
-        if (procEntry.spellFamilyName && (procEntry.spellFamilyName != eventInfo.GetSpellInfo()->SpellFamilyName))
+        if (procEntry.spellFamilyName && eventInfo.GetSpellInfo() && (procEntry.spellFamilyName != eventInfo.GetSpellInfo()->SpellFamilyName))
             return false;
 
-        if (procEntry.spellFamilyMask && !(procEntry.spellFamilyMask & eventInfo.GetSpellInfo()->SpellFamilyFlags))
+        if (procEntry.spellFamilyMask && eventInfo.GetSpellInfo() && !(procEntry.spellFamilyMask & eventInfo.GetSpellInfo()->SpellFamilyFlags))
             return false;
     }
 
@@ -2330,6 +2330,14 @@ void SpellMgr::LoadSpellLinked()
             TC_LOG_ERROR("sql.sql", "Spell %u listed in `spell_linked_spell` does not exist", abs(trigger));
             continue;
         }
+
+        if (effect >= 0)
+            for (uint8 j = 0; j < MAX_SPELL_EFFECTS; ++j)
+            {
+                if (spellInfo->Effects[j].CalcValue() == abs(effect))
+                    TC_LOG_ERROR("sql.sql", "Spell %u Effect: %u listed in `spell_linked_spell` has same bp%u like effect (possible hack)", abs(trigger), abs(effect), j);
+            }
+
         spellInfo = GetSpellInfo(abs(effect));
         if (!spellInfo)
         {
@@ -3317,6 +3325,11 @@ void SpellMgr::LoadSpellInfoCorrections()
                 break;
             case 17364: // Stormstrike
                 spellInfo->AttributesEx3 |= SPELL_ATTR3_STACK_FOR_DIFF_CASTERS;
+                break;
+            case 51798: // Brewfest - Relay Race - Intro - Quest Complete
+            case 47134: // Quest Complete
+                //! HACK: This spell break quest complete for alliance and on retail not used °_O
+                spellInfo->Effects[EFFECT_0].Effect = 0;
                 break;
             // ULDUAR SPELLS
             //

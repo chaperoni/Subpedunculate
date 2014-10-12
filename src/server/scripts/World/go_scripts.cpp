@@ -24,7 +24,6 @@ go_ethereum_stasis
 go_sacred_fire_of_life
 go_shrine_of_the_birds
 go_southfury_moonstone
-go_field_repair_bot_74A
 go_orb_of_command
 go_resonite_cask
 go_tablet_of_madness
@@ -88,24 +87,6 @@ public:
     {
         if (player->HasSkill(SKILL_TAILORING) && player->GetBaseSkillValue(SKILL_TAILORING) >= 280 && !player->HasSpell(26086))
             player->CastSpell(player, 26095, false);
-
-        return true;
-    }
-};
-
-/*######
-## go_field_repair_bot_74A
-######*/
-
-class go_field_repair_bot_74A : public GameObjectScript
-{
-public:
-    go_field_repair_bot_74A() : GameObjectScript("go_field_repair_bot_74A") { }
-
-    bool OnGossipHello(Player* player, GameObject* /*go*/) override
-    {
-        if (player->HasSkill(SKILL_ENGINEERING) && player->GetBaseSkillValue(SKILL_ENGINEERING) >= 300 && !player->HasSpell(22704))
-            player->CastSpell(player, 22864, false);
 
         return true;
     }
@@ -770,7 +751,7 @@ public:
             return false;
 
         pPrisoner->DisappearAndDie();
-        player->KilledMonsterCredit(NPC_EBON_BLADE_PRISONER_HUMAN, 0);
+        player->KilledMonsterCredit(NPC_EBON_BLADE_PRISONER_HUMAN);
         switch (pPrisoner->GetEntry())
         {
             case NPC_EBON_BLADE_PRISONER_HUMAN:
@@ -988,7 +969,7 @@ public:
         if (qInfo)
         {
             /// @todo prisoner should help player for a short period of time
-            player->KilledMonsterCredit(qInfo->RequiredNpcOrGo[0], 0);
+            player->KilledMonsterCredit(qInfo->RequiredNpcOrGo[0]);
             pPrisoner->DisappearAndDie();
         }
         return true;
@@ -1020,7 +1001,7 @@ public:
             if (pTadpole)
             {
                 pTadpole->DisappearAndDie();
-                player->KilledMonsterCredit(NPC_WINTERFIN_TADPOLE, 0);
+                player->KilledMonsterCredit(NPC_WINTERFIN_TADPOLE);
                 //FIX: Summon minion tadpole
             }
         }
@@ -1154,7 +1135,7 @@ class go_gjalerbron_cage : public GameObjectScript
             {
                 if (Creature* prisoner = go->FindNearestCreature(NPC_GJALERBRON_PRISONER, 5.0f))
                 {
-                    player->KilledMonsterCredit(NPC_GJALERBRON_PRISONER, 0);
+                    player->KilledMonsterCredit(NPC_GJALERBRON_PRISONER);
 
                     prisoner->AI()->Talk(SAY_FREE);
                     prisoner->DespawnOrUnsummon(6000);
@@ -1284,7 +1265,6 @@ void AddSC_go_scripts()
 {
     new go_cat_figurine();
     new go_barov_journal();
-    new go_field_repair_bot_74A();
     new go_gilded_brazier();
     new go_orb_of_command();
     new go_shrine_of_the_birds();
