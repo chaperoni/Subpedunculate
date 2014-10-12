@@ -494,14 +494,14 @@ class Battleground
         uint8 GetUniqueBracketId() const;
                
         //vote
-        std::map<uint64, uint8> BattlegroundVoteMap;
-        void CastVote(uint64 playerguid, uint8 vote);
-        bool HasVoted(uint64 playerguid);
+        std::map<ObjectGuid, uint8> BattlegroundVoteMap;
+        void CastVote(ObjectGuid playerguid, uint8 vote);
+        bool HasVoted(ObjectGuid playerguid);
         void CalculateVoteResult(BattlegroundVotePhases VotePhase);
         virtual void ProcessVoteResult(uint8 result) { }
         void AnnounceVoteResult(uint8 result);
-        uint64 GetVoteNPCGuid(TeamId teamId) { return teamId == TEAM_ALLIANCE ? m_VoteNPCGuidA : m_VoteNPCGuidH; }
-        void SetVoteNPCGuid(uint64 guid, TeamId teamId) { (teamId == TEAM_ALLIANCE ? m_VoteNPCGuidA : m_VoteNPCGuidH) = guid; }
+        ObjectGuid GetVoteNPCGuid(TeamId teamId) { return teamId == TEAM_ALLIANCE ? m_VoteNPCGuidA : m_VoteNPCGuidH; }
+        void SetVoteNPCGuid(ObjectGuid guid, TeamId teamId) { (teamId == TEAM_ALLIANCE ? m_VoteNPCGuidA : m_VoteNPCGuidH) = guid; }
 
 
     protected:
@@ -636,7 +636,7 @@ class Battleground
         Position StartPosition[BG_TEAMS_COUNT];
         float m_StartMaxDist;
         uint32 ScriptId;
-        uint64 m_VoteNPCGuidA;
-        uint64 m_VoteNPCGuidH;
+        ObjectGuid m_VoteNPCGuidA;
+        ObjectGuid m_VoteNPCGuidH;
 };
 #endif

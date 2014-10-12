@@ -18,7 +18,7 @@ public:
             killed->SetKothInProgress(false);
             killed->RemoveKothFighterSlot();
             killed->RemoveByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_FFA_PVP);
-            sKothMgr->SetFighterGUID(0, slot - 1);
+            sKothMgr->SetFighterGUID(ObjectGuid::Empty, slot - 1);
             sKothMgr->TeleportFighter(killed, 4);
             killed->ResurrectPlayer(1.0f);
             killed->SpawnCorpseBones();

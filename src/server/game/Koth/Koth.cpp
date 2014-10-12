@@ -28,7 +28,7 @@ void Koth::Reset()
     m_maxFighters = 2;
     m_WaitingCount = 0;
     m_fighterCount = 0;
-    m_oldwinnerGUID = 0;
+    m_oldwinnerGUID = ObjectGuid::Empty;
     m_streak = 0;
     SetState(KOTH_STATE_WAITING);
 }
@@ -51,7 +51,7 @@ void Koth::SendMessageToQueue(std::string text)
     //also message the waiting fighters
     for (uint8 i = 0; i < m_maxFighters; i++)
     {
-        uint64 guid = GetFighterGUID(i);
+        ObjectGuid guid = GetFighterGUID(i);
         if (guid == 0)
             continue;
         player = sObjectAccessor->FindPlayer(guid);
@@ -123,7 +123,7 @@ void Koth::QueueRemovePlayer(Player* player)
     if (itr == m_QueuedPlayers.end())
     {
 		std::string playerName = player->GetName();
-        TC_LOG_ERROR("bg.battleground", "KOTH Queue: couldn't find player %s (GUID: %u)", playerName.c_str(), GUID_LOPART(player->GetGUID()));
+        TC_LOG_ERROR("bg.battleground", "KOTH Queue: couldn't find player %s (GUID: %u)", playerName.c_str(), player->GetGUID().GetCounter());
         return;
     }
 
@@ -134,7 +134,7 @@ void Koth::QueueRemovePlayer(Player* player)
 	SendMessageToPlayer(player, text);
 }
 
-bool Koth::IsInQueue(uint64 guid)
+bool Koth::IsInQueue(ObjectGuid guid)
 {
     KothQueuedPlayersMap::iterator itr = m_QueuedPlayers.find(guid);
     if (itr == m_QueuedPlayers.end())
@@ -142,7 +142,7 @@ bool Koth::IsInQueue(uint64 guid)
     return true;
 }
 
-bool Koth::QueueInvitePlayer(uint64 guid, uint8 slot)
+bool Koth::QueueInvitePlayer(ObjectGuid guid, uint8 slot)
 {
     KothQueuedPlayersMap::iterator itr = m_QueuedPlayers.find(guid); //guaranteed to be in queue
 
@@ -189,7 +189,7 @@ void Koth::PlayerInviteResponse(Player* player, bool accept)
     else
     {
         DecreaseWaitingCount();
-        SetFighterGUID(0, kinfo.InvitedSlot - 1);
+        SetFighterGUID(ObjectGuid::Empty, kinfo.InvitedSlot - 1);
     }
 
     player->SetInvitedForKoth(false);
@@ -208,7 +208,7 @@ void Koth::CancelInvite(Player* player)
 
     DecreaseWaitingCount();
     DecreaseFighterCount();
-    SetFighterGUID(0, player->GetKothFighterSlot() - 1);
+    SetFighterGUID(ObjectGuid::Empty, player->GetKothFighterSlot() - 1);
     SendMessageToPlayer(player, "KOTH: invite cancelled");
     player->SetInvitedForKoth(false);
     player->RemoveKothFighterSlot();    
@@ -251,7 +251,7 @@ void Koth::KothQueueUpdate(uint32 diff)
             {
                 if (m_QueuedPlayers.empty())
                     break;
-                if (GetFighterGUID(i) > 0) //someone assigned to this slot already
+                if (GetFighterGUID(i)) //someone assigned to this slot already
                     continue;
                 for (itr = m_RQueuedPlayers.begin(); itr != m_RQueuedPlayers.end(); itr++)
                 {
@@ -279,7 +279,7 @@ void Koth::KothQueueUpdate(uint32 diff)
                 {
                     if (winner->GetGUID() != m_oldwinnerGUID)
                     {
-                        SetFighterGUID(0, i);
+                        SetFighterGUID(ObjectGuid::Empty, i);
                         SetFighterGUID(winner->GetGUID(), KOTH_FIGHTER_KING);
                         m_streak = 1;
                         m_oldwinnerGUID = winner->GetGUID();
@@ -316,7 +316,7 @@ void Koth::Retire(Player* player)
     player->RemoveKothFighterSlot();
     player->RemoveByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
     TeleportFighter(player, 4);
-    SetFighterGUID(0, KOTH_FIGHTER_KING);
+    SetFighterGUID(ObjectGuid::Empty, KOTH_FIGHTER_KING);
     for (uint8 i = 1; i < m_maxFighters; i++)
     {
         next = sObjectAccessor->FindPlayer(GetFighterGUID(i));
@@ -324,7 +324,7 @@ void Koth::Retire(Player* player)
         {
             next->SetKothFighterSlot(KOTH_FIGHTER_KING);
             m_streak = 0;
-            SetFighterGUID(0, i);
+            SetFighterGUID(ObjectGuid::Empty, i);
             DecreaseFighterCount();
             DecreaseWaitingCount();
             SetFighterGUID(next->GetGUID(), KOTH_FIGHTER_KING);
@@ -385,7 +385,7 @@ bool Koth::PrepareArena()
         DecreaseWaitingCount();
         if (!player)
         {
-            SetFighterGUID(0, i);
+            SetFighterGUID(ObjectGuid::Empty, i);
             offlineCount++;
             continue;
         }
@@ -447,7 +447,7 @@ Creature* Koth::GetKOTHCreature(uint32 type)
     if (!creature)
     {
         TC_LOG_ERROR("bg.battleground", "Koth::GetBGCreature: creature (type: %u, GUID: %u) not found!",
-        type, GUID_LOPART(KothCreatures[type]));
+        type, KothCreatures[type].GetCounter());
     }
     return creature;
 }

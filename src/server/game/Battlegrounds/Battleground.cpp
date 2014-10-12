@@ -611,14 +611,14 @@ void Battleground::SendPacketToAll(WorldPacket* packet)
             player->SendDirectMessage(packet);
 }
 
-void Battleground::CastVote(uint64 playerguid, uint8 vote)
+void Battleground::CastVote(ObjectGuid playerguid, uint8 vote)
 {
     BattlegroundVoteMap[playerguid] = vote;
 }
 
-bool Battleground::HasVoted(uint64 playerguid)
+bool Battleground::HasVoted(ObjectGuid playerguid)
 {
-    std::map<uint64, uint8>::iterator itr;
+    std::map<ObjectGuid, uint8>::iterator itr;
     itr = BattlegroundVoteMap.find(playerguid);
     if (itr == BattlegroundVoteMap.end())
         return false;
@@ -642,7 +642,7 @@ void Battleground::CalculateVoteResult(BattlegroundVotePhases VotePhase)
     uint8 tieSize = 1;
 
 
-    for (std::map<uint64, uint8>::const_iterator itr = BattlegroundVoteMap.begin(); itr != BattlegroundVoteMap.end(); ++itr)
+    for (std::map<ObjectGuid, uint8>::const_iterator itr = BattlegroundVoteMap.begin(); itr != BattlegroundVoteMap.end(); ++itr)
     {
         vote = itr->second;
         VoteCount.at(vote).second = VoteCount.at(vote).second + 1;
@@ -674,7 +674,7 @@ void Battleground::CalculateVoteResult(BattlegroundVotePhases VotePhase)
 
 void Battleground::AnnounceVoteResult(uint8 result)
 {
-    uint64 guid = GetVoteNPCGuid(TEAM_ALLIANCE);
+    ObjectGuid guid = GetVoteNPCGuid(TEAM_ALLIANCE);
     Creature* voteA = GetBgMap()->GetCreature(guid);
     guid = GetVoteNPCGuid(TEAM_HORDE);
     Creature* voteH = GetBgMap()->GetCreature(guid);

@@ -82,14 +82,14 @@ public:
         return &instance;
     }
 
-    typedef std::map<uint64, KothQueueInfo> KothQueuedPlayersMap;
+    typedef std::map<ObjectGuid, KothQueueInfo> KothQueuedPlayersMap;
 
     struct cmpByJoinTime
     {
         bool operator()(const KothQueuedPlayersMap::iterator& lhs, const KothQueuedPlayersMap::iterator& rhs) const { return lhs->second.JoinTime < rhs->second.JoinTime; }
     };
 
-    typedef std::map <KothQueuedPlayersMap::iterator, uint64, cmpByJoinTime> KothRQueuedPlayersMap;
+    typedef std::map <KothQueuedPlayersMap::iterator, ObjectGuid, cmpByJoinTime> KothRQueuedPlayersMap;
 
     KothQueuedPlayersMap m_QueuedPlayers;
     KothRQueuedPlayersMap m_RQueuedPlayers;
@@ -106,7 +106,7 @@ public:
     void SendCreatureAnnounce(std::string text);
 
     //Queue
-    bool IsInQueue(uint64 guid);
+    bool IsInQueue(ObjectGuid guid);
     void KothQueueUpdate(uint32 diff);
     void QueueAddPlayer(Player* player);
     void QueueRemovePlayer(Player* player);
@@ -117,7 +117,7 @@ public:
     void SetMaxFighters(Player* player, uint8 count);
 
     //invites
-    bool QueueInvitePlayer(uint64 guid, uint8 slot);
+    bool QueueInvitePlayer(ObjectGuid guid, uint8 slot);
     void PlayerInviteResponse(Player* player, bool accept);
     void SetState(KothStates state) { KothState = state; }
     void IncreaseWaitingCount() { m_WaitingCount++; }
@@ -132,8 +132,8 @@ public:
     uint8 GetMaxFighters() { return m_maxFighters; }
     void TeleportFighter(Player* player, uint8 slot);
 
-    uint64 GetFighterGUID(uint8 slot) { return m_fighterGUIDs[slot]; }
-    void SetFighterGUID(uint64 fighterGUID, uint8 slot) { m_fighterGUIDs[slot] = fighterGUID; }
+    ObjectGuid GetFighterGUID(uint8 slot) { return m_fighterGUIDs[slot]; }
+    void SetFighterGUID(ObjectGuid fighterGUID, uint8 slot) { m_fighterGUIDs[slot] = fighterGUID; }
     void ArenaAddPlayer(Player* player, uint8 slot);
     void ArenaRemovePlayer(Player* player);
 
@@ -142,15 +142,15 @@ public:
     void TeleportFightersStartPosition();
 
     //Creatures
-    typedef std::vector<uint64> KOTHCreatures;
+    typedef std::vector<ObjectGuid> KOTHCreatures;
     KOTHCreatures KothCreatures;
 
     Creature* GetKOTHCreature(uint32 type);
     Creature* AddCreature(uint32 entry, uint32 type, float x, float y, float z, float o, TeamId teamId = TEAM_NEUTRAL, uint32 respawntime = 0);
 
 private:
-    std::vector<uint64> m_fighterGUIDs;
-    uint64 m_oldwinnerGUID;
+    std::vector<ObjectGuid> m_fighterGUIDs;
+    ObjectGuid m_oldwinnerGUID;
     uint8 m_streak;
     uint8 m_fighterCount;
     uint8 m_maxFighters;
@@ -166,7 +166,7 @@ private:
 class KothQueueRemoveEvent : public BasicEvent
 {
 public:
-    KothQueueRemoveEvent(uint64 pl_guid, uint32 removeTime)
+    KothQueueRemoveEvent(ObjectGuid pl_guid, uint32 removeTime)
         : m_PlayerGuid(pl_guid), m_RemoveTime(removeTime)
     { }
 
@@ -175,7 +175,7 @@ public:
     virtual bool Execute(uint64 e_time, uint32 p_time) override;
     virtual void Abort(uint64 e_time) override;
 private:
-    uint64 m_PlayerGuid;
+    ObjectGuid m_PlayerGuid;
     uint32 m_RemoveTime;
 };
 

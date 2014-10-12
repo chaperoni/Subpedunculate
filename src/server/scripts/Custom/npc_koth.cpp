@@ -21,8 +21,7 @@ class npc_koth : public CreatureScript
 {
 public:
     npc_koth() : CreatureScript("npc_koth") { }
-
-    typedef std::map<uint64, KothQueueInfo> KothQueuedPlayersMap;
+    
     bool OnGossipHello(Player* player, Creature* creature) override
     {
         KothStates state = sKothMgr->GetKothState();
