@@ -57,23 +57,45 @@ public:
         PlayerItemInfo& info = itemmap[player->GetGUID()];
         info.enchantList.clear();
         ItemTemplate const* itemp = sObjectMgr->GetItemTemplate(id);
-        uint32 inventorytype = itemp->InventoryType;
+        uint32 type = itemp->InventoryType;
+        uint32 level = itemp->ItemLevel;        
+        std::vector<uint32> multitype;
+        multitype.push_back(type);
 
-        PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_ENCHANTIDS);
-        stmt->setUInt32(0, inventorytype);
-        PreparedQueryResult result = WorldDatabase.Query(stmt);
-        if (!result)
+        if (type == 17 || type == 21 || type == 22)
+            multitype.push_back(13);
+
+        if (type == 20)
+            multitype.push_back(5);
+
+        
+
+        uint8 failed = 0;
+        for (uint8 i = 0; i < multitype.size(); i++)
         {
-            return false;
+            PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_ENCHANTIDS);
+            stmt->setUInt32(0, multitype[i]);
+            PreparedQueryResult result = WorldDatabase.Query(stmt);
+            if (!result)
+            {
+                failed++;
+                continue;
+            }
+            do
+            {
+                Field* fields = result->Fetch();
+                uint32 spellid = fields[0].GetUInt32();
+                SpellEntry const* pSpell = sSpellStore.LookupEntry(spellid);
+                if (pSpell->baseLevel > level)
+                    continue;
+                SpellItemEnchantmentEntry const* pEnchant = sSpellItemEnchantmentStore.LookupEntry(pSpell->EffectMiscValue[0]);
+                
+                if (pEnchant)
+                    info.enchantList.push_back(pEnchant);
+            } while (result->NextRow());
         }
-        do
-        {
-            Field* fields = result->Fetch();
-            uint32 enchid = fields[0].GetUInt32();
-            SpellItemEnchantmentEntry const* pEnchant = sSpellItemEnchantmentStore.LookupEntry(enchid);
-            info.enchantList.push_back(pEnchant);
-        } while (result->NextRow());
-        return true;
+        
+        return failed != multitype.size();
     }
 
     void GenerateSuffixList(Player* player, const ItemTemplate* itemp)
