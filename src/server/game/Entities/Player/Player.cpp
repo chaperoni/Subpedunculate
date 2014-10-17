@@ -21818,6 +21818,12 @@ bool Player::BuyItemFromVendorSlot(ObjectGuid vendorguid, uint32 vendorslot, uin
         }
     }
 
+    if (creature->GetScriptName() == "npc_gearvendor")
+    {
+        sScriptMgr->OnGossipSelect(this, creature, item, 0);
+        return true;
+    }
+
     if ((bag == NULL_BAG && slot == NULL_SLOT) || IsInventoryPos(bag, slot))
     {
         if (!_StoreOrEquipNewItem(vendorslot, item, count, bag, slot, price, pProto, creature, crItem, true))
@@ -21839,11 +21845,7 @@ bool Player::BuyItemFromVendorSlot(ObjectGuid vendorguid, uint32 vendorslot, uin
         return false;
     }
 
-    if (creature->GetScriptName() == "npc_gearvendor" && (pProto->RandomProperty > 0 || pProto->RandomSuffix > 0))
-    {
-        sScriptMgr->OnGossipSelect(this, creature, item, 0);
-        return true;
-    }
+    
 
     return crItem->maxcount != 0;
 }
