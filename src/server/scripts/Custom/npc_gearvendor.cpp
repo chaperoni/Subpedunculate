@@ -184,7 +184,7 @@ public:
         if (itemp->RandomSuffix)
         neg = -1;
         ItemPosCountVec dest;
-        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, info.itemid, 1);
+        InventoryResult msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, info.itemid, 1);
         if (msg == EQUIP_ERR_OK)
         {
             Item* item = player->StoreNewItem(dest, info.itemid, true, info.suffixid*neg);
@@ -196,6 +196,8 @@ public:
             }
             player->SendNewItem(item, 1, true, false);
         }
+        else
+            player->SendEquipError(msg, NULL, NULL, info.itemid);
     }
 
     void EndGossip(Player* player, Creature* creature)
@@ -207,7 +209,7 @@ public:
         PlayerItemInfo& info = itemmap[player->GetGUID()];
         info.step = GOSSIP_STEP_ITEM;
         player->GetSession()->SendListInventory(creature->GetGUID());
-    }
+    }    
 
     bool OnGossipHello(Player* player, Creature* creature) override
     {
