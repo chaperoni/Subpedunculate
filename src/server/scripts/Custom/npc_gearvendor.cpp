@@ -10,17 +10,13 @@
 
 
 //Menu
-#define MENU_ITEMS "items"
+#define MENU_ITEMS_1 "Category 1"
+#define MENU_ITEMS_2 "Category 2"
+#define MENU_ITEMS_3 "Category 3"
+#define MENU_ITEMS_4 "Category 4"
+#define MENU_ITEMS_5 "Category 5"
 #define MENU_CLOSE "close"
 
-//items
-#define ITEM_1 12006
-#define ITEM_2 51994
-#define ITEM_3 6586
-#define ITEM_4 6587
-#define ITEM_5 15331
-#define ITEM_6 36487
-#define ITEM_7 11967
 
 enum GossipSteps
 {
@@ -220,8 +216,11 @@ public:
         info.itemid = 0;
         info.enchantid = 0;
         info.suffixid = 0;
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, MENU_ITEMS, 1000004, 1);
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, MENU_ITEMS, 1000005, 1);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, MENU_ITEMS_1, 1000004, 1);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, MENU_ITEMS_2, 1000005, 1);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, MENU_ITEMS_3, 1000006, 1);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, MENU_ITEMS_4, 1000007, 1);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, MENU_ITEMS_5, 1000008, 1);
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, MENU_CLOSE, 0, 2);
         player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
         return true;
@@ -240,7 +239,7 @@ public:
                 player->CLOSE_GOSSIP_MENU();
             else
             {
-                player->GetSession()->SendListInventory(creature->GetGUID());
+                player->GetSession()->SendListInventory(creature->GetGUID(), sender);
                 info.step = GOSSIP_STEP_ITEM;
             }
             break;
