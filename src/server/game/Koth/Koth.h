@@ -148,6 +148,10 @@ public:
     Creature* GetKOTHCreature(uint32 type);
     Creature* AddCreature(uint32 entry, uint32 type, float x, float y, float z, float o, TeamId teamId = TEAM_NEUTRAL, uint32 respawntime = 0);
 
+    void Debug(uint8 mode, Player* player, Creature* creature);
+
+    uint32 GetQueueTime(Player* player);
+
 private:
     std::vector<ObjectGuid> m_fighterGUIDs;
     ObjectGuid m_oldwinnerGUID;

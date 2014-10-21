@@ -16,18 +16,41 @@
 #define T_KOTH_MAX "Set Challenger Count"
 #define T_KOTH_RETIRE "Retire"
 #define T_KOTH_CANCEL "Nevermind"
+#define T_KOTH_DEBUG "Debug"
+#define T_KOTH_INFO "Koth Info"
+#define T_KOTH_FIGHTER_INFO "Fighter info"
+#define T_KOTH_QUEUE_INFO "Queue info"
 
 class npc_koth : public CreatureScript
 {
 public:
     npc_koth() : CreatureScript("npc_koth") { }
     
+    void PlayerInfo(Player* player, uint32 lowguid, bool queue)
+    {
+        Player* kothplayer = sObjectMgr->GetPlayerByLowGUID(lowguid);
+            if (!kothplayer)
+        {
+            sKothMgr->SendMessageToPlayer(player, "Invalid player");
+            return;
+        }      
+        sKothMgr->SendMessageToPlayer(player, "Name: " + kothplayer->GetName());
+        sKothMgr->SendMessageToPlayer(player, "Invited to koth: " + std::to_string(kothplayer->IsInvitedForKoth()));
+        if (queue)
+        {
+            sKothMgr->SendMessageToPlayer(player, "Queue time: " + std::to_string(sKothMgr->GetQueueTime(kothplayer)) + " seconds.");
+            return;
+        }        
+        sKothMgr->SendMessageToPlayer(player, "Fighter slot: " + std::to_string(kothplayer->GetKothFighterSlot()));
+        
+    }
+
     bool OnGossipHello(Player* player, Creature* creature) override
     {
         KothStates state = sKothMgr->GetKothState();
         if (player->GetKothFighterSlot() == 1)
         {
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_MAX, 0, 7);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_MAX, 101, 7);
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, T_KOTH_RETIRE, 0, 6);
         }
         else if (player->IsInvitedForKoth())
@@ -41,6 +64,9 @@ public:
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_TRAINER, T_KOTH_QUEUE, 0, 1);
         else if (state == KOTH_STATE_WAITING)
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_CANCEL_INVITE, 0, 5);
+
+        if (player->GetSession()->GetSecurity() >= SEC_GAMEMASTER)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_DEBUG, 101, 10);
 
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_CANCEL, 0,9);
         player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
@@ -88,9 +114,32 @@ public:
         case 8:
             sKothMgr->SetMaxFighters(player, sender);
             break;
+
+        case 10:
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_INFO, 0, 11);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_FIGHTER_INFO, 101, 11);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, T_KOTH_QUEUE_INFO, 102, 11);
+            player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+            break;
+
+        case 11:            
+            sKothMgr->Debug(sender % 100, player, creature);
+            break;
+
+        case 12:
+            PlayerInfo(player, sender, false);
+            player->CLOSE_GOSSIP_MENU();
+            break;
+
+        case 13:
+            PlayerInfo(player, sender, true);
+            player->CLOSE_GOSSIP_MENU();
+            break;
         }
 
-        if (action != 7)
+
+
+        if (sender < 100)
             player->CLOSE_GOSSIP_MENU();
         return true;
     };

@@ -1,5 +1,6 @@
 #include "Koth.h"
 #include "Player.h"
+#include "ScriptedGossip.h"
 
 
 Koth::Koth()
@@ -450,6 +451,64 @@ Creature* Koth::GetKOTHCreature(uint32 type)
         type, KothCreatures[type].GetCounter());
     }
     return creature;
+}
+
+void Koth::Debug(uint8 mode, Player* player, Creature* creature)
+{
+    std::string fighterguids = "";
+    Player* kothplayer = nullptr;
+    switch (mode)
+    {
+    case 0: //Koth Info
+        
+        for (uint8 i = 0; i < m_fighterGUIDs.size(); i++)
+        {
+            fighterguids += std::to_string(m_fighterGUIDs[i]);
+            fighterguids += " ";
+        }
+        SendMessageToPlayer(player, "Fighter guids: " + fighterguids);
+        SendMessageToPlayer(player, "Max fighters: " + std::to_string(m_maxFighters));
+        SendMessageToPlayer(player, "Fighter count: " + std::to_string(m_fighterCount));
+        SendMessageToPlayer(player, "Waiting count: " + std::to_string(m_WaitingCount));
+        SendMessageToPlayer(player, "Queue size: " + std::to_string(m_QueuedPlayers.size()));
+        SendMessageToPlayer(player, "Streak: " + std::to_string(m_streak));
+        SendMessageToPlayer(player, "State: " + std::to_string(KothState));
+        break;
+
+    case 1: //fighter info
+        for (uint8 i = 0; i < m_fighterGUIDs.size(); i++)
+        {
+            kothplayer = sObjectAccessor->FindPlayer(m_fighterGUIDs[i]);
+            if (kothplayer)
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, kothplayer->GetName(), kothplayer->GetGUIDLow(), 12);
+            else
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, "None", 0, 0);
+        }
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, "Cancel", 0, 0);
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+        break;
+    case 2: //Queue info
+        for (KothQueuedPlayersMap::const_iterator itr = m_QueuedPlayers.begin(); itr != m_QueuedPlayers.end(); ++itr)
+        {
+            kothplayer = sObjectAccessor->FindPlayer(itr->first);
+            if (kothplayer)
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, kothplayer->GetName(), kothplayer->GetGUIDLow(), 13);
+            else
+                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, "error: " + std::to_string(itr->first.GetRawValue()), 0, 0);
+        }
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, "Cancel", 0, 0);
+        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
+        break;
+    }    
+}
+
+uint32 Koth::GetQueueTime(Player* player)
+{
+    KothQueuedPlayersMap::const_iterator itr = m_QueuedPlayers.find(player->GetGUID());
+    if (itr == m_QueuedPlayers.end())
+        return 0;
+    uint32 queuetime = (getMSTime() - itr->second.JoinTime) / 1000;
+    return queuetime;
 }
 
 bool KothQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)

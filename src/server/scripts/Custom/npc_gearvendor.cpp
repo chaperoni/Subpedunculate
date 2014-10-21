@@ -17,7 +17,6 @@
 #define MENU_ITEMS_5 "Category 5"
 #define MENU_CLOSE "close"
 
-
 enum GossipSteps
 {
     GOSSIP_STEP_MENU = 0,
@@ -26,9 +25,6 @@ enum GossipSteps
     GOSSIP_STEP_ENCHANT = 3,
     GOSSIP_STEP_END = 4
 };
-
-
-
 
 class npc_gearvendor : public CreatureScript
 {
@@ -46,15 +42,13 @@ public:
 
     std::map<ObjectGuid, PlayerItemInfo> itemmap;
 
-
-
     bool InitEnchantList(uint32 id, Player* player)
     {
         PlayerItemInfo& info = itemmap[player->GetGUID()];
         info.enchantList.clear();
         ItemTemplate const* itemp = sObjectMgr->GetItemTemplate(id);
         uint32 type = itemp->InventoryType;
-        uint32 level = itemp->ItemLevel;        
+        uint32 level = itemp->ItemLevel;
         std::vector<uint32> multitype;
         multitype.push_back(type);
 
@@ -63,8 +57,6 @@ public:
 
         if (type == 20)
             multitype.push_back(5);
-
-        
 
         uint8 failed = 0;
         for (uint8 i = 0; i < multitype.size(); i++)
@@ -85,18 +77,16 @@ public:
                 if (pSpell->baseLevel > level)
                     continue;
                 SpellItemEnchantmentEntry const* pEnchant = sSpellItemEnchantmentStore.LookupEntry(pSpell->EffectMiscValue[0]);
-                
+
                 if (pEnchant)
                     info.enchantList.push_back(pEnchant);
             } while (result->NextRow());
         }
-        
         return failed != multitype.size();
     }
 
     void GenerateSuffixList(Player* player, const ItemTemplate* itemp)
     {
-
         if (itemp->RandomProperty > 0)
         {
             std::vector<ItemRandomPropertiesEntry const*> enchantModList = GetRandomPropertiesList(itemp->RandomProperty);
@@ -209,7 +199,7 @@ public:
         PlayerItemInfo& info = itemmap[player->GetGUID()];
         info.step = GOSSIP_STEP_ITEM;
         player->GetSession()->SendListInventory(creature->GetGUID());
-    }    
+    }
 
     bool OnGossipHello(Player* player, Creature* creature) override
     {
@@ -285,7 +275,6 @@ public:
 
         return true;
     };
-
 };
 
 void AddSC_npc_gearvendor()
