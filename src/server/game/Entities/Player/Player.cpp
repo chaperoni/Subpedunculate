@@ -21718,7 +21718,8 @@ bool Player::BuyItemFromVendorSlot(ObjectGuid vendorguid, uint32 vendorslot, uin
     uint32 currentVendor = GetSession()->GetCurrentVendor();
     if (currentVendor && vendorguid != PlayerTalkClass->GetGossipMenu().GetSenderGUID())
         return false;
-    
+
+
     VendorItemData const* vItems = currentVendor ? sObjectMgr->GetNpcVendorItemList(currentVendor) : creature->GetVendorItems();
     if (!vItems || vItems->Empty())
     {
@@ -21845,8 +21846,6 @@ bool Player::BuyItemFromVendorSlot(ObjectGuid vendorguid, uint32 vendorslot, uin
         SendEquipError(EQUIP_ERR_ITEM_DOESNT_GO_TO_SLOT, NULL, NULL);
         return false;
     }
-
-    
 
     return crItem->maxcount != 0;
 }

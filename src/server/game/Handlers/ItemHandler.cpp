@@ -692,7 +692,6 @@ void WorldSession::HandleBuyItemInSlotOpcode(WorldPacket& recvData)
     // bag not found, cheating?
     if (bag == NULL_BAG)
         return;
-
     GetPlayer()->BuyItemFromVendorSlot(vendorguid, slot, item, count, bag, bagslot);
 }
 
@@ -710,7 +709,6 @@ void WorldSession::HandleBuyItemOpcode(WorldPacket& recvData)
         --slot;
     else
         return; // cheating
-
     GetPlayer()->BuyItemFromVendorSlot(vendorguid, slot, item, count, NULL_BAG, NULL_SLOT);
 }
 

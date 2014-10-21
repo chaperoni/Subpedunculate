@@ -37,6 +37,7 @@ public:
         uint32 itemid = 0;
         uint32 suffixid = 0;
         uint32 enchantid = 0;
+        uint32 vendor = 0;
         std::vector<SpellItemEnchantmentEntry const*> enchantList;
     };
 
@@ -195,10 +196,13 @@ public:
         player->CLOSE_GOSSIP_MENU();
         CreateItem(player);
         std::map<ObjectGuid, PlayerItemInfo>::iterator itr = itemmap.find(player->GetGUID());
+        uint32 vendor = itr->second.vendor;
         itemmap.erase(itr);
         PlayerItemInfo& info = itemmap[player->GetGUID()];
         info.step = GOSSIP_STEP_ITEM;
-        player->GetSession()->SendListInventory(creature->GetGUID());
+        info.vendor = vendor;
+        player->GetSession()->SendListInventory(creature->GetGUID(), vendor);
+        player->PlayerTalkClass->GetGossipMenu().SetSenderGUID(creature->GetGUID());
     }
 
     bool OnGossipHello(Player* player, Creature* creature) override
@@ -208,6 +212,7 @@ public:
         info.itemid = 0;
         info.enchantid = 0;
         info.suffixid = 0;
+        info.vendor = 0;
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, MENU_ITEMS_1, 1000004, 1);
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, MENU_ITEMS_2, 1000005, 1);
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, MENU_ITEMS_3, 1000006, 1);
@@ -233,6 +238,7 @@ public:
             {
                 player->GetSession()->SendListInventory(creature->GetGUID(), sender);
                 info.step = GOSSIP_STEP_ITEM;
+                info.vendor = sender;
             }
             break;
 
